@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Anúncios ML + Shopee</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e8eaf0; min-height: 100vh; padding: 24px 16px; }
+  .container { max-width: 940px; margin: 0 auto; }
+
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid #1e2230; }
+  .logo { width: 40px; height: 40px; background: #FFE600; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  header h1 { font-size: 19px; font-weight: 700; color: #fff; line-height: 1.2; }
+  header p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  .card { background: #161b27; border: 1px solid #1e2230; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+  .card-title { font-size: 11px; font-weight: 700; color: #FFE600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 11px; }
+  @media(max-width:600px){ .grid-2,.grid-3{ grid-template-columns:1fr; } }
+
+  label { display: block; font-size: 11px; color: #9ca3af; margin-bottom: 4px; font-weight: 500; }
+  input, textarea, select { width: 100%; background: #0f1117; border: 1px solid #2a2f3e; border-radius: 7px; color: #e8eaf0; font-size: 13px; padding: 8px 11px; outline: none; transition: border-color .15s; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { border-color: #FFE600; }
+  textarea { resize: vertical; min-height: 68px; }
+  select option { background: #161b27; }
+
+  /* ── FRETE ── */
+  .frete-card { background: #0d1520; border: 1px solid #1a3a5c; border-radius: 10px; padding: 18px; }
+  .frete-inputs { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+  @media(max-width:640px){ .frete-inputs{ grid-template-columns:1fr 1fr; } }
+  .input-unit { position: relative; }
+  .unit-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #4b5563; pointer-events: none; }
+
+  .frete-resultado { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .frete-box { background: #161b27; border: 1px solid #1e2230; border-radius: 8px; padding: 14px; }
+  .frete-box-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .frete-box.gratis .frete-box-title { color: #22c55e; }
+  .frete-box.pago .frete-box-title { color: #60a5fa; }
+  .frete-valor { font-size: 22px; font-weight: 800; color: #fff; }
+  .frete-detalhe { font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
+  .frete-alerta { font-size: 11px; color: #f59e0b; margin-top: 6px; background: rgba(245,158,11,.08); border-radius: 5px; padding: 6px 8px; }
+
+  /* peso cubado badge */
+  .peso-badge { display: inline-flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .pbadge { background: #1e2230; border: 1px solid #2a2f3e; border-radius: 6px; padding: 5px 10px; font-size: 11px; color: #9ca3af; }
+  .pbadge strong { color: #e8eaf0; }
+  .pbadge.destaque { border-color: #FFE600; }
+  .pbadge.destaque strong { color: #FFE600; }
+
+  /* ── MARGEM ── */
+  .margem-inputs { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  @media(max-width:700px){ [style*="grid-template-columns:repeat(5"] { grid-template-columns:1fr 1fr !important; } }
+  @media(max-width:600px){ .margem-inputs{ grid-template-columns:1fr 1fr; } }
+  .margem-resultados { display: grid; grid-template-columns: repeat(4,1fr); gap: 9px; margin-top: 12px; }
+  @media(max-width:600px){ .margem-resultados{ grid-template-columns:1fr 1fr; } }
+  .metrica { background: #0f1117; border: 1px solid #1e2230; border-radius: 8px; padding: 11px; text-align: center; }
+  .metrica-valor { font-size: 17px; font-weight: 800; color: #fff; }
+  .metrica-label { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .metrica.ok .metrica-valor { color: #22c55e; }
+  .metrica.warn .metrica-valor { color: #f59e0b; }
+  .metrica.bad .metrica-valor { color: #ef4444; }
+
+  /* cenários frete grátis / pago */
+  .cenarios { display: grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
+  .cenario-box { background:#0f1117; border-radius:8px; padding:12px; border:1px solid #1e2230; }
+  .cenario-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; margin-bottom:6px; }
+  .cenario-label.verde { color:#22c55e; }
+  .cenario-label.azul { color:#60a5fa; }
+  .cenario-row { display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; margin-bottom:3px; }
+  .cenario-row span:last-child { color:#e8eaf0; font-weight:600; }
+  .cenario-row.total { border-top:1px solid #1e2230; padding-top:6px; margin-top:4px; }
+  .cenario-row.total span { color:#fff; font-size:13px; }
+  .cenario-row.total span:last-child { color:#FFE600; }
+
+  /* ── BOTÃO GERAR ── */
+  .btn-gerar { width:100%; background:#FFE600; color:#0f1117; font-size:14px; font-weight:700; padding:13px; border:none; border-radius:10px; cursor:pointer; transition:opacity .15s, transform .1s; margin-bottom:22px; letter-spacing:.02em; }
+  .btn-gerar:hover:not(:disabled){ opacity:.88; transform:translateY(-1px); }
+  .btn-gerar:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+  .loading { text-align:center; padding:28px; color:#6b7280; display:none; }
+  .spinner { width:30px; height:30px; border:3px solid #1e2230; border-top-color:#FFE600; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 10px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ── RESULTADOS ── */
+  .results-wrapper{ display:none; }
+  .results-wrapper.visible{ display:block; }
+  .tabs { display:flex; gap:4px; margin-bottom:16px; background:#161b27; border:1px solid #1e2230; border-radius:10px; padding:4px; }
+  .tab-btn { flex:1; padding:9px; border:none; border-radius:7px; cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; background:transparent; color:#6b7280; }
+  .tab-btn.active { background:#FFE600; color:#0f1117; }
+  .tab-btn:hover:not(.active){ color:#e8eaf0; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .result-block{ margin-bottom:16px; }
+  .result-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .result-label { font-size:10px; font-weight:700; color:#FFE600; text-transform:uppercase; letter-spacing:.08em; }
+  .btn-copy { background:transparent; border:1px solid #2a2f3e; color:#9ca3af; font-size:11px; padding:3px 8px; border-radius:5px; cursor:pointer; transition:all .15s; }
+  .btn-copy:hover{ border-color:#FFE600; color:#FFE600; }
+  .btn-copy.copied{ border-color:#22c55e; color:#22c55e; }
+  .result-content { background:#0f1117; border:1px solid #1e2230; border-radius:8px; padding:12px; font-size:13px; line-height:1.65; color:#d1d5db; white-space:pre-wrap; word-break:break-word; }
+  .tag-list{ display:flex; flex-wrap:wrap; gap:5px; }
+  .tag { background:#1e2230; border:1px solid #2a2f3e; border-radius:20px; padding:3px 10px; font-size:11px; color:#d1d5db; }
+  .img-prompt-box { background:#0a0d14; border:1px dashed #FFE600; border-radius:8px; padding:12px; font-size:12px; color:#d1d5db; line-height:1.6; }
+  .img-tip { font-size:11px; color:#6b7280; margin-top:6px; }
+  .img-tip a{ color:#FFE600; text-decoration:none; }
+  .section-divider{ border:none; border-top:1px solid #1e2230; margin:16px 0; }
+  .char-count{ font-size:10px; color:#6b7280; text-align:right; margin-top:3px; }
+  .char-ok{ color:#22c55e; } .char-warn{ color:#f59e0b; } .char-bad{ color:#ef4444; }
+  .shopee-badge { display:inline-block; background:#EE4D2D; color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:5px; vertical-align:middle; }
+  .ml-badge { display:inline-block; background:#FFE600; color:#0f1117; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:5px; vertical-align:middle; }
+  .dica-shopee { background:rgba(238,77,45,.07); border:1px solid rgba(238,77,45,.2); border-radius:8px; padding:9px 13px; font-size:11px; color:#fca5a5; margin-bottom:14px; line-height:1.5; }
+  /* frete shopee */
+  .shopee-frete-card { background:#0d0a0a; border:1px solid rgba(238,77,45,.3); border-radius:10px; padding:14px; margin-bottom:0; }
+  .sh-met { background:#161b27; border:1px solid #1e2230; border-radius:7px; padding:10px; text-align:center; }
+  .sh-met-val { font-size:17px; font-weight:800; color:#fff; }
+  .sh-met-label { font-size:10px; color:#6b7280; margin-top:2px; }
+  .sh-met-destaque { border-color:rgba(238,77,45,.4); }
+  .sh-met-destaque .sh-met-val { color:#f87171; }
+  .plataforma-toggle{ display:flex; gap:7px; margin-bottom:14px; }
+  .plat-btn { flex:1; padding:9px; border-radius:8px; border:2px solid #2a2f3e; background:transparent; color:#6b7280; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; }
+  .plat-btn.ml.active{ border-color:#FFE600; color:#FFE600; background:rgba(255,230,0,.06); }
+  .plat-btn.shopee.active{ border-color:#EE4D2D; color:#EE4D2D; background:rgba(238,77,45,.06); }
+  .plat-btn.ambos.active{ border-color:#7c3aed; color:#a78bfa; background:rgba(124,58,237,.06); }
+  .plat-btn:hover:not(.active){ border-color:#4b5563; color:#d1d5db; }
+  .fonte-nota { font-size:10px; color:#4b5563; margin-top:8px; }
+  .fonte-nota a{ color:#6b7280; }
+  .btn-concorrentes { width:100%; background:transparent; border:1.5px solid #3b82f6; color:#60a5fa; font-size:13px; font-weight:700; padding:11px; border-radius:9px; cursor:pointer; transition:all .15s; margin-bottom:14px; letter-spacing:.02em; }
+  .btn-concorrentes:hover:not(:disabled){ background:rgba(59,130,246,.08); }
+  .btn-concorrentes:disabled{ opacity:.4; cursor:not-allowed; }
+  .conc-loading { text-align:center; font-size:12px; color:#6b7280; padding:10px; display:none; }
+  .conc-resultado { display:none; }
+  .conc-resultado.visible { display:block; }
+  .conc-metricas { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+  @media(max-width:600px){ .conc-metricas{ grid-template-columns:1fr 1fr; } }
+  .conc-met { background:#0f1117; border:1px solid #1e2230; border-radius:8px; padding:10px; text-align:center; }
+  .conc-met-val { font-size:16px; font-weight:800; color:#60a5fa; }
+  .conc-met-label { font-size:10px; color:#6b7280; margin-top:2px; }
+  .conc-lista { display:flex; flex-direction:column; gap:6px; }
+  .conc-item { display:flex; justify-content:space-between; align-items:center; background:#0f1117; border:1px solid #1e2230; border-radius:7px; padding:9px 12px; gap:10px; }
+  .conc-item-nome { font-size:12px; color:#d1d5db; flex:1; line-height:1.4; }
+  .conc-item-preco { font-size:14px; font-weight:700; color:#fff; white-space:nowrap; }
+  .conc-item-badge { font-size:10px; padding:2px 7px; border-radius:10px; font-weight:600; white-space:nowrap; }
+  .badge-mais-barato { background:rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.3); }
+  .badge-mais-caro   { background:rgba(239,68,68,.12); color:#f87171; border:1px solid rgba(239,68,68,.25); }
+  .badge-medio       { background:rgba(251,191,36,.1);  color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+  .posicionamento-box { background:#0a1520; border:1px solid #1a3a5c; border-radius:8px; padding:12px; margin-top:10px; font-size:12px; color:#93c5fd; line-height:1.6; }
+  .posicionamento-box strong { color:#60a5fa; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">🔧</div>
+    <div style="flex:1;">
+      <h1>Gerador de Anúncios com IA</h1>
+      <p>Mercado Livre · Shopee · Frete · Margem</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button onclick="abrirHistorico()" style="background:transparent;border:1px solid #2a2f3e;color:#9ca3af;font-size:12px;padding:7px 12px;border-radius:7px;cursor:pointer;" title="Histórico de produtos">📋 Histórico</button>
+      <button onclick="baixarFerrAmenta()" style="background:#FFE600;border:none;color:#0f1117;font-size:12px;font-weight:700;padding:7px 12px;border-radius:7px;cursor:pointer;" title="Baixar ferramenta">⬇ Baixar</button>
+    </div>
+  </header>
+
+  <!-- ── MODAL HISTÓRICO ── -->
+  <div id="modal-hist" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;padding:20px;overflow-y:auto;">
+    <div style="background:#161b27;border:1px solid #1e2230;border-radius:14px;max-width:680px;margin:0 auto;padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-size:14px;font-weight:700;color:#FFE600;">📋 Histórico de Produtos</span>
+        <button onclick="fecharHistorico()" style="background:transparent;border:none;color:#9ca3af;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      <div id="hist-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="hist-vazio" style="text-align:center;color:#6b7280;font-size:13px;padding:20px;display:none;">Nenhum produto salvo ainda. Gere um anúncio para salvar automaticamente.</div>
+      <button onclick="limparHistorico()" style="margin-top:14px;background:transparent;border:1px solid #ef4444;color:#ef4444;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;">🗑 Limpar histórico</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTADO FRETE (preenchido automaticamente pelo card produto) ── -->
+  <div class="card" id="card-frete-resultado" style="display:none;">
+    <div class="card-title">🚚 Custo de Frete — Mercado Envios</div>
+    <div class="frete-card">
+      <div id="peso-badges" class="peso-badge" style="margin-bottom:12px; display:none;">
+        <span class="pbadge">Peso real: <strong id="b-real">—</strong></span>
+        <span class="pbadge">Peso cubado: <strong id="b-cubado">—</strong></span>
+        <span class="pbadge destaque">⚖️ Peso cobrado: <strong id="b-cobrado">—</strong></span>
+      </div>
+      <div class="frete-resultado" id="frete-resultado" style="display:none;">
+        <div class="frete-box gratis">
+          <div class="frete-box-title">🟢 Frete Grátis (você absorve)</div>
+          <div class="frete-valor" id="f-gratis-val">—</div>
+          <div class="frete-detalhe" id="f-gratis-det"></div>
+        </div>
+        <div class="frete-box pago">
+          <div class="frete-box-title">🔵 Frete Pago pelo Comprador</div>
+          <div class="frete-valor" id="f-pago-val">—</div>
+          <div class="frete-detalhe" id="f-pago-det"></div>
+        </div>
+      </div>
+      <div id="frete-alerta" class="frete-alerta" style="display:none;"></div>
+      <p class="fonte-nota">Tabela vigente desde 02/03/2026 — MercadoLíderes e reputação verde. <a href="https://www.mercadolivre.com.br/ajuda/custos-envio-reputacao-verde-sem-reputacao_48392" target="_blank">Fonte oficial ↗</a></p>
+    </div>
+  </div>
+
+  <!-- ── CALCULADORA MARGEM ── -->
+  <div class="card">
+    <div class="card-title">💰 Calculadora de Margem e Preço Sugerido</div>
+
+    <!-- linha 1: seletor plataforma + entradas -->
+    <div style="margin-bottom:12px;">
+      <label>Plataforma</label>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <button id="calc-btn-ml" onclick="setCalcPlat('ml')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #FFE600;background:rgba(255,230,0,.08);color:#FFE600;font-size:12px;font-weight:700;cursor:pointer;">🟡 Mercado Livre</button>
+        <button id="calc-btn-sh" onclick="setCalcPlat('shopee')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #2a2f3e;background:transparent;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;">🟠 Shopee</button>
+      </div>
+    </div>
+
+    <!-- linha 2: entradas principais -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px;">
+      <div>
+        <label>Custo do produto (R$)</label>
+        <input type="number" id="custo" placeholder="0,00" step="0.01" min="0" oninput="calcMargem()" />
+      </div>
+      <div id="campo-comissao-ml">
+        <label>Comissão ML (%)</label>
+        <input type="number" id="comissao" value="13" step="0.5" min="0" max="30" oninput="calcMargem()" />
+      </div>
+      <div id="campo-comissao-sh" style="display:none;">
+        <label>Comissão Shopee <span style="color:#EE4D2D;font-size:10px;" id="sh-com-label">20% + R$4</span></label>
+        <input type="number" id="comissao_sh_pct" value="20" step="0.1" min="0" max="30" oninput="calcMargem()" readonly style="opacity:.6;cursor:not-allowed;" />
+      </div>
+      <div>
+        <label>Imposto (%)</label>
+        <input type="number" id="imposto" value="8" step="0.5" min="0" max="50" oninput="calcMargem()" />
+      </div>
+      <div>
+        <label>Margem desejada (%)</label>
+        <input type="number" id="margem_desejada" value="30" step="1" min="0" max="200" oninput="calcMargem()" />
+      </div>
+      <div>
+        <label>Preço de venda (R$) <span style="color:#FFE600;font-size:10px;">ou deixe calcular ↑</span></label>
+        <input type="number" id="preco_venda" placeholder="auto" step="0.01" min="0" oninput="calcMargem()" />
+      </div>
+    </div>
+
+    <!-- Peso e Dimensões — dentro da calculadora para atualizar frete em tempo real -->
+    <div style="padding:12px 0 12px;border-top:1px solid #1e2230;border-bottom:1px solid #1e2230;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📦 Peso e Dimensões (frete calculado em tempo real)</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div class="input-unit">
+          <label>Peso real</label>
+          <input type="number" id="peso_real" placeholder="0,0" step="0.01" min="0" oninput="calcFrete();calcMargem();" />
+          <span class="unit-label">kg</span>
+        </div>
+        <div class="input-unit">
+          <label>Comprimento</label>
+          <input type="number" id="dim_c" placeholder="0" step="1" min="0" oninput="calcFrete();calcMargem();" />
+          <span class="unit-label">cm</span>
+        </div>
+        <div class="input-unit">
+          <label>Largura</label>
+          <input type="number" id="dim_l" placeholder="0" step="1" min="0" oninput="calcFrete();calcMargem();" />
+          <span class="unit-label">cm</span>
+        </div>
+        <div class="input-unit">
+          <label>Altura</label>
+          <input type="number" id="dim_a" placeholder="0" step="1" min="0" oninput="calcFrete();calcMargem();" />
+          <span class="unit-label">cm</span>
+        </div>
+      </div>
+      <!-- badges peso cobrado inline -->
+      <div id="peso-badges-margem" style="display:none;margin-top:8px;" class="peso-badge">
+        <span class="pbadge">Peso real: <strong id="bm-real">—</strong></span>
+        <span class="pbadge">Peso cubado: <strong id="bm-cubado">—</strong></span>
+        <span class="pbadge destaque">⚖️ Peso cobrado: <strong id="bm-cobrado">—</strong></span>
+      </div>
+    </div>
+
+    <!-- preço sugerido destaque -->
+    <div id="preco-sugerido-box" style="display:none;background:#0a1a0a;border:1.5px solid #22c55e;border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:10px;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">💡 Preço sugerido (frete grátis incluso) — margem de <span id="ps-margem-label">30</span>%</div>
+        <div style="font-size:28px;font-weight:900;color:#22c55e;" id="ps-valor">—</div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;line-height:1.7;" id="ps-detalhe"></div>
+    </div>
+
+    <div class="margem-resultados" id="margem-resultados">
+      <div class="metrica" id="m-lucro"><div class="metrica-valor" id="v-lucro">—</div><div class="metrica-label">Lucro / unid</div></div>
+      <div class="metrica" id="m-margem"><div class="metrica-valor" id="v-margem">—</div><div class="metrica-label">Margem real</div></div>
+      <div class="metrica" id="m-roi"><div class="metrica-valor" id="v-roi">—</div><div class="metrica-label">ROI</div></div>
+      <div class="metrica" id="m-break"><div class="metrica-valor" id="v-break">—</div><div class="metrica-label">Break-even</div></div>
+    </div>
+
+    <!-- cenários frete -->
+    <div class="cenarios" id="cenarios-frete" style="display:none;">
+      <div class="cenario-box">
+        <div class="cenario-label verde">🟢 Com Frete Grátis</div>
+        <div class="cenario-row"><span>Custo produto</span><span id="cg-custo">—</span></div>
+        <div class="cenario-row"><span>Imposto</span><span id="cg-imp">—</span></div>
+        <div class="cenario-row"><span>Frete (seu custo)</span><span id="cg-frete">—</span></div>
+        <div class="cenario-row"><span>Comissão ML</span><span id="cg-com">—</span></div>
+        <div class="cenario-row total"><span>Lucro líquido</span><span id="cg-lucro">—</span></div>
+        <div class="cenario-row"><span>Margem</span><span id="cg-margem">—</span></div>
+      </div>
+      <div class="cenario-box">
+        <div class="cenario-label azul">🔵 Comprador Paga Frete</div>
+        <div class="cenario-row"><span>Custo produto</span><span id="cp-custo">—</span></div>
+        <div class="cenario-row"><span>Imposto</span><span id="cp-imp">—</span></div>
+        <div class="cenario-row"><span>Frete (custo op.)</span><span id="cp-frete">—</span></div>
+        <div class="cenario-row"><span>Comissão ML</span><span id="cp-com">—</span></div>
+        <div class="cenario-row total"><span>Lucro líquido</span><span id="cp-lucro">—</span></div>
+        <div class="cenario-row"><span>Margem</span><span id="cp-margem">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRODUTO ── -->
+  <div class="card">
+    <div class="card-title">📦 Dados do Produto</div>
+    <div class="plataforma-toggle">
+      <button class="plat-btn ml" id="btn-ml" onclick="setPlat('ml')">🟡 Mercado Livre</button>
+      <button class="plat-btn shopee" id="btn-shopee" onclick="setPlat('shopee')">🟠 Shopee</button>
+      <button class="plat-btn ambos active" id="btn-ambos" onclick="setPlat('ambos')">⚡ Ambas</button>
+    </div>
+    <div class="grid-2">
+      <div>
+        <label>Nome do produto *</label>
+        <input type="text" id="nome" placeholder="Ex: Chave Combinada 17mm Gedore" />
+      </div>
+      <div>
+        <label>Categoria</label>
+        <select id="categoria">
+          <option value="ferramentas">Ferramentas Manuais</option>
+          <option value="ferramentas_eletricas">Ferramentas Elétricas</option>
+          <option value="autopecas">Peças Automotivas</option>
+          <option value="utilidades">Utilidades / Casa</option>
+          <option value="epi">EPI / Segurança</option>
+          <option value="fixacao">Fixação / Parafusos</option>
+        </select>
+      </div>
+      <div>
+        <label>Marca</label>
+        <input type="text" id="marca" placeholder="Ex: Gedore, Tramontina, Bosch..." />
+      </div>
+      <div>
+        <label>Modelo / Referência</label>
+        <input type="text" id="modelo" placeholder="Ex: 7 R-17, 1600W, Kit com 5..." />
+      </div>
+    </div>
+    <div style="margin-top:11px">
+      <label>Especificações (material, tamanho, tensão…)</label>
+      <textarea id="specs" placeholder="Ex: Aço cromo-vanádio, cabo bicomponente, norma DIN 3113, peso 280g..."></textarea>
+    </div>
+    <div style="margin-top:11px" class="grid-2">
+      <div>
+        <label>Público / aplicação</label>
+        <input type="text" id="publico" placeholder="Ex: Mecânicos, eletricistas..." />
+      </div>
+      <div>
+        <label>Diferenciais</label>
+        <input type="text" id="diferenciais" placeholder="Ex: Garantia 1 ano, pronto envio..." />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONCORRENTES ── -->
+  <div class="card">
+    <div class="card-title">🔎 Pesquisa de Preços — Concorrentes no ML</div>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Digite o produto acima e clique para buscar preços reais de anúncios no Mercado Livre agora.</p>
+    <button class="btn-concorrentes" id="btnConc" onclick="buscarConcorrentes()">🔍 Buscar preços de concorrentes</button>
+    <div class="conc-loading" id="conc-loading"><div class="spinner" style="width:20px;height:20px;margin-bottom:6px;"></div>Buscando preços no mercado...</div>
+    <div class="conc-resultado" id="conc-resultado">
+      <div class="conc-metricas">
+        <div class="conc-met"><div class="conc-met-val" id="c-minimo">—</div><div class="conc-met-label">Menor preço</div></div>
+        <div class="conc-met"><div class="conc-met-val" id="c-maximo">—</div><div class="conc-met-label">Maior preço</div></div>
+        <div class="conc-met"><div class="conc-met-val" id="c-media">—</div><div class="conc-met-label">Média mercado</div></div>
+        <div class="conc-met"><div class="conc-met-val" id="c-qtd">—</div><div class="conc-met-label">Anúncios encontrados</div></div>
+      </div>
+      <div class="conc-lista" id="conc-lista"></div>
+      <div class="posicionamento-box" id="posicionamento-box"></div>
+    </div>
+  </div>
+
+  <button class="btn-gerar" id="btnGerar" onclick="gerar()">⚡ Gerar anúncio completo com IA</button>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Gerando seu anúncio com IA...</p>
+  </div>
+
+  <!-- ── RESULTADOS ── -->
+  <div class="results-wrapper" id="resultsWrapper">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('tab-ml')" id="tbtn-ml">🟡 Mercado Livre</button>
+      <button class="tab-btn" onclick="showTab('tab-shopee')" id="tbtn-shopee">🟠 Shopee</button>
+      <button class="tab-btn" onclick="showTab('tab-imagem')" id="tbtn-imagem">🖼️ Imagem</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-ml">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">📌 Título <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiar('ml-titulo',this)">Copiar</button></div>
+        <div class="result-content" id="ml-titulo"></div>
+        <div class="char-count" id="char-ml-titulo"></div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">🏷️ Campo Modelo <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiar('ml-modelo',this)">Copiar</button></div>
+        <div class="result-content" id="ml-modelo"></div>
+        <div style="font-size:10px;color:#6b7280;margin-top:3px;">Cole no campo "Modelo" da ficha técnica do anúncio no ML</div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">🔎 Palavras mais buscadas <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiar('ml-buscadas',this)">Copiar</button></div>
+        <div class="result-content" id="ml-buscadas"></div>
+        <div class="char-count" id="char-ml-buscadas"></div>
+        <div style="font-size:10px;color:#6b7280;margin-top:3px;">Separadas por vírgula · Cole no campo "Palavras-chave" do anúncio (limite 120 chars)</div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">✅ Bullet points <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiar('ml-bullets',this)">Copiar</button></div>
+        <div class="result-content" id="ml-bullets"></div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">📝 Descrição <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiar('ml-descricao',this)">Copiar</button></div>
+        <div class="result-content" id="ml-descricao"></div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">🔍 Tags internas <span class="ml-badge">ML</span></span><button class="btn-copy" onclick="copiarTags('ml',this)">Copiar todas</button></div>
+        <div class="tag-list" id="ml-tags"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-shopee">
+      <!-- FRETE SHOPEE -->
+      <div class="shopee-frete-card" id="shopee-frete-card">
+        <div style="font-size:11px;font-weight:700;color:#EE4D2D;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">🚚 Custo de Frete — Shopee (vigente 01/03/2026)</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+          <div class="sh-met"><div class="sh-met-val" id="sh-frete-real">—</div><div class="sh-met-label">Frete real estimado</div></div>
+          <div class="sh-met"><div class="sh-met-val" id="sh-subsidio">—</div><div class="sh-met-label">Subsídio Shopee</div></div>
+          <div class="sh-met sh-met-destaque"><div class="sh-met-val" id="sh-seu-custo">—</div><div class="sh-met-label">Seu custo real</div></div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;line-height:1.6;" id="sh-frete-obs">Preencha o peso do produto e o preço de venda para calcular.</div>
+        <div style="font-size:10px;color:#4b5563;margin-top:6px;">Subsídios: até R$79,99 → R$20 · R$80–R$199,99 → R$30 · acima de R$200 → R$40. Frete estimado para região Sudeste/Sul. Norte/Nordeste pode ser até 40% maior.</div>
+      </div>
+      <div class="dica-shopee" style="margin-top:12px;">💡 <strong>Shopee:</strong> título até 120 chars, descrição com emojis, hashtags no final.</div>
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">📌 Título <span class="shopee-badge">SHOPEE</span></span><button class="btn-copy" onclick="copiar('sh-titulo',this)">Copiar</button></div>
+        <div class="result-content" id="sh-titulo"></div>
+        <div class="char-count" id="char-sh-titulo"></div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">📝 Descrição <span class="shopee-badge">SHOPEE</span></span><button class="btn-copy" onclick="copiar('sh-descricao',this)">Copiar</button></div>
+        <div class="result-content" id="sh-descricao"></div>
+      </div>
+      <hr class="section-divider">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label"># Hashtags <span class="shopee-badge">SHOPEE</span></span><button class="btn-copy" onclick="copiar('sh-hashtags',this)">Copiar</button></div>
+        <div class="result-content" id="sh-hashtags"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-imagem">
+      <div class="result-block">
+        <div class="result-header"><span class="result-label">🖼️ Prompt para imagem (fundo branco)</span><button class="btn-copy" onclick="copiar('prompt-imagem',this)">Copiar</button></div>
+        <div class="img-prompt-box" id="prompt-imagem"></div>
+        <p class="img-tip">Cole no <a href="https://www.bing.com/images/create" target="_blank">Bing Image Creator</a> (gratuito) ou <a href="https://firefly.adobe.com" target="_blank">Adobe Firefly</a> para gerar imagem com fundo branco.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ═══════════════════════════════════════════
+// TABELA FRETE ML — vigente 02/03/2026
+// Fonte: mercadolivre.com.br/ajuda/custos-envio-reputacao-verde-sem-reputacao_48392
+// Colunas = faixas de preço do produto
+// [0-18.99, 19-48.99, 49-78.99, 79-99.99, 100-119.99, 120-149.99, 150-199.99, 200+]
+// ═══════════════════════════════════════════
+const FRETE_TABELA = [
+  { max: 0.3,   valores: [5.65, 6.55, 7.75, 12.35, 14.35, 16.45, 18.45, 20.95] },
+  { max: 0.5,   valores: [5.95, 6.65, 7.85, 13.25, 15.45, 17.65, 19.85, 22.55] },
+  { max: 1,     valores: [6.05, 6.75, 7.95, 13.85, 16.15, 18.45, 20.75, 23.65] },
+  { max: 1.5,   valores: [6.15, 6.85, 8.05, 14.15, 16.45, 18.85, 21.15, 24.65] },
+  { max: 2,     valores: [6.25, 6.95, 8.15, 14.45, 16.85, 19.25, 21.65, 24.65] },
+  { max: 3,     valores: [6.35, 7.95, 8.55, 15.75, 18.35, 21.05, 23.65, 26.25] },
+  { max: 4,     valores: [6.45, 8.15, 8.95, 17.05, 19.85, 22.65, 25.55, 28.35] },
+  { max: 5,     valores: [6.55, 8.35, 9.75, 18.45, 21.55, 24.65, 27.75, 30.75] },
+  { max: 6,     valores: [6.65, 8.55, 9.95, 25.45, 28.55, 32.65, 35.75, 39.75] },
+  { max: 7,     valores: [6.75, 8.75,10.15, 27.05, 31.05, 36.05, 40.05, 44.05] },
+  { max: 8,     valores: [6.85, 8.95,10.35, 28.85, 33.65, 38.45, 43.25, 48.05] },
+  { max: 9,     valores: [6.95, 9.15,10.55, 29.65, 34.55, 39.55, 44.45, 49.35] },
+  { max: 11,    valores: [7.05, 9.55,10.95, 41.25, 48.05, 54.95, 61.75, 68.65] },
+  { max: 13,    valores: [7.15, 9.95,11.35, 42.15, 49.25, 56.25, 63.25, 70.25] },
+  { max: 15,    valores: [7.25,10.15,11.55, 45.05, 52.45, 59.95, 67.45, 74.95] },
+  { max: 17,    valores: [7.35,10.35,11.75, 48.55, 56.05, 63.55, 70.75, 78.65] },
+  { max: 20,    valores: [7.45,10.55,11.95, 54.75, 63.85, 72.95, 82.05, 91.15] },
+  { max: 25,    valores: [7.65,10.95,12.15, 64.05, 75.05, 84.75, 95.35,105.95] },
+  { max: 30,    valores: [7.75,11.15,12.35, 65.95, 75.45, 85.55, 96.25,106.95] },
+  { max: 40,    valores: [7.85,11.35,12.55, 67.75, 78.95, 88.95, 99.15,107.05] },
+  { max: 50,    valores: [7.95,11.55,12.75, 70.25, 81.05, 92.05,102.55,110.75] },
+  { max: 60,    valores: [8.05,11.75,12.95, 74.95, 86.45, 98.15,109.35,118.15] },
+  { max: 70,    valores: [8.15,11.95,13.15, 80.25, 92.95,105.05,117.15,126.55] },
+  { max: 80,    valores: [8.25,12.15,13.35, 83.95, 97.05,109.85,122.45,132.25] },
+  { max: 90,    valores: [8.35,12.35,13.55, 93.25,107.45,122.05,136.05,146.95] },
+  { max: 100,   valores: [8.45,12.55,13.75,106.55,123.95,139.55,155.55,167.95] },
+  { max: 125,   valores: [8.55,12.75,13.95,119.25,138.05,156.05,173.95,187.95] },
+  { max: 150,   valores: [8.65,12.75,14.15,126.55,146.15,165.65,184.65,199.45] },
+  { max: Infinity, valores:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95] }
+];
+
+// faixas de preço: índice da coluna
+const FAIXAS_PRECO = [18.99, 48.99, 78.99, 99.99, 119.99, 149.99, 199.99, Infinity];
+
+function colPreco(preco) {
+  for (let i = 0; i < FAIXAS_PRECO.length; i++) {
+    if (preco <= FAIXAS_PRECO[i]) return i;
+  }
+  return FAIXAS_PRECO.length - 1;
+}
+
+function calcPesoCubado(c, l, a) {
+  return (c * l * a) / 6000;
+}
+
+function buscarFrete(pesoKg, coluna) {
+  for (const faixa of FRETE_TABELA) {
+    if (pesoKg <= faixa.max) return faixa.valores[coluna];
+  }
+  return FRETE_TABELA[FRETE_TABELA.length - 1].valores[coluna];
+}
+
+function fmt(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+
+function calcFrete() {
+  const pesoReal = parseFloat(document.getElementById('peso_real').value) || 0;
+  const c = parseFloat(document.getElementById('dim_c').value) || 0;
+  const l = parseFloat(document.getElementById('dim_l').value) || 0;
+  const a = parseFloat(document.getElementById('dim_a').value) || 0;
+
+  if (pesoReal <= 0 && (c <= 0 || l <= 0 || a <= 0)) {
+    document.getElementById('frete-resultado').style.display = 'none';
+    document.getElementById('peso-badges').style.display = 'none';
+    document.getElementById('frete-alerta').style.display = 'none';
+    return;
+  }
+
+  const pesoCubado = (c > 0 && l > 0 && a > 0) ? calcPesoCubado(c, l, a) : 0;
+  const pesoCobrado = Math.max(pesoReal, pesoCubado);
+
+  document.getElementById('b-real').textContent = pesoReal.toFixed(3) + ' kg';
+  document.getElementById('b-cubado').textContent = pesoCubado > 0 ? pesoCubado.toFixed(3) + ' kg' : '—';
+  document.getElementById('b-cobrado').textContent = pesoCobrado.toFixed(3) + ' kg';
+  document.getElementById('peso-badges').style.display = 'flex';
+
+  // badges inline na calculadora de margem
+  const bm = document.getElementById('peso-badges-margem');
+  if (bm) {
+    document.getElementById('bm-real').textContent    = pesoReal.toFixed(3) + ' kg';
+    document.getElementById('bm-cubado').textContent  = pesoCubado > 0 ? pesoCubado.toFixed(3) + ' kg' : '—';
+    document.getElementById('bm-cobrado').textContent = pesoCobrado.toFixed(3) + ' kg';
+    bm.style.display = 'flex';
+  }
+
+  // Preço de venda para calcular coluna do frete
+  const precoVenda = parseFloat(document.getElementById('preco_venda').value) || 0;
+
+  // Frete grátis: comprador não paga = seller absorve; preço cobrado ao vendedor é o da tabela pelo preço real do produto
+  const colGratis = precoVenda > 0 ? colPreco(precoVenda) : 3; // padrão: R$ 79-99
+  const custoGratis = buscarFrete(pesoCobrado, colGratis);
+
+  // Frete pago: comprador paga; custo operacional costuma ser menor (faixa de preço mais baixa para o vendedor)
+  // Quando comprador paga frete, o vendedor ainda arca com o custo operacional de coleta
+  // Aproximação: usa faixa menor (produto abaixo R$79 = col 2)
+  const colPago = Math.min(colGratis, 2);
+  const custoPago = buscarFrete(pesoCobrado, colPago);
+
+  document.getElementById('f-gratis-val').textContent = fmt(custoGratis);
+  document.getElementById('f-gratis-det').textContent = 'Custo debitado pelo ML (peso cobrado: ' + pesoCobrado.toFixed(2) + ' kg)';
+
+  document.getElementById('f-pago-val').textContent = fmt(custoPago);
+  document.getElementById('f-pago-det').textContent = 'Custo operacional (coleta). Diferença: ' + fmt(custoGratis - custoPago) + ' a menos';
+
+  document.getElementById('frete-resultado').style.display = 'grid';
+  document.getElementById('card-frete-resultado').style.display = 'block';
+
+  // Alerta se cubado > real
+  const alertEl = document.getElementById('frete-alerta');
+  if (pesoCubado > pesoReal && pesoCubado > 0) {
+    alertEl.textContent = '⚠️ Peso cubado (' + pesoCubado.toFixed(2) + ' kg) maior que o real. O ML vai cobrar pelo cubado.';
+    alertEl.style.display = 'block';
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  // atualiza cenários na margem
+  atualizarCenarios(custoGratis, custoPago);
+  calcMargem();
+}
+
+let _freteGratis = 0, _fretePago = 0;
+
+function atualizarCenarios(g, p) {
+  _freteGratis = g;
+  _fretePago = p;
+}
+
+// ── COMISSÃO SHOPEE — tabela oficial 2026 ──
+const SHOPEE_COM = [
+  { max: 79.99,   pct: 0.20, fixo: 4  },
+  { max: 99.99,   pct: 0.14, fixo: 16 },
+  { max: 199.99,  pct: 0.14, fixo: 20 },
+  { max: 499.99,  pct: 0.14, fixo: 26 },
+  { max: Infinity,pct: 0.14, fixo: 26 }
+];
+
+function shopeeComissao(preco) {
+  for (const f of SHOPEE_COM) {
+    if (preco <= f.max) return { valor: preco * f.pct + f.fixo, pct: f.pct, fixo: f.fixo };
+  }
+  return { valor: 0, pct: 0, fixo: 0 };
+}
+
+function shopeeComLabel(preco) {
+  for (const f of SHOPEE_COM) {
+    if (preco <= f.max) return `${(f.pct*100).toFixed(0)}% + R$${f.fixo}`;
+  }
+  return '14% + R$26';
+}
+
+let calcPlat = 'ml';
+function setCalcPlat(p) {
+  calcPlat = p;
+  const btnML = document.getElementById('calc-btn-ml');
+  const btnSH = document.getElementById('calc-btn-sh');
+  btnML.style.borderColor = p === 'ml' ? '#FFE600' : '#2a2f3e';
+  btnML.style.color       = p === 'ml' ? '#FFE600' : '#6b7280';
+  btnML.style.background  = p === 'ml' ? 'rgba(255,230,0,.08)' : 'transparent';
+  btnSH.style.borderColor = p === 'shopee' ? '#EE4D2D' : '#2a2f3e';
+  btnSH.style.color       = p === 'shopee' ? '#EE4D2D' : '#6b7280';
+  btnSH.style.background  = p === 'shopee' ? 'rgba(238,77,45,.08)' : 'transparent';
+  document.getElementById('campo-comissao-ml').style.display = p === 'ml'     ? '' : 'none';
+  document.getElementById('campo-comissao-sh').style.display = p === 'shopee' ? '' : 'none';
+  // Labels dos cenários
+  const labelCom = p === 'ml' ? 'Comissão ML' : 'Comissão Shopee';
+  document.querySelectorAll('.label-comissao').forEach(el => el.textContent = labelCom);
+  calcMargem();
+}
+
+function calcMargem() {
+  window._calcMargemEmAndamento = true;
+  const custo       = parseFloat(document.getElementById('custo').value) || 0;
+  const comPct      = parseFloat(document.getElementById('comissao').value) || 0;
+  const impPct      = parseFloat(document.getElementById('imposto').value) || 0;
+  const margDes     = parseFloat(document.getElementById('margem_desejada').value) || 0;
+  const precoManual = parseFloat(document.getElementById('preco_venda').value) || 0;
+
+  if (custo <= 0) {
+    ['v-lucro','v-margem','v-roi','v-break'].forEach(id => document.getElementById(id).textContent = '—');
+    ['m-lucro','m-margem','m-roi','m-break'].forEach(id => document.getElementById(id).className = 'metrica');
+    document.getElementById('cenarios-frete').style.display = 'none';
+    document.getElementById('preco-sugerido-box').style.display = 'none';
+    return;
+  }
+
+  const divisor = 1 - (comPct / 100) - (impPct / 100) - (margDes / 100);
+
+  // ── Comissão: ML (% simples) ou Shopee (% + fixo por faixa) ──
+  // Para o preço sugerido, usamos iteração pois a comissão Shopee depende do preço final
+  function getComissao(preco) {
+    if (calcPlat === 'shopee') {
+      const c = shopeeComissao(preco);
+      // Atualiza label
+      document.getElementById('sh-com-label').textContent = shopeeComLabel(preco);
+      return c.valor;
+    }
+    return preco * (comPct / 100);
+  }
+
+  // Divisor só funciona direto para ML (comissão linear)
+  // Para Shopee, calculamos por iteração
+  function precoSugeridoCalc(custoBase) {
+    if (calcPlat === 'ml') {
+      return divisor > 0 ? custoBase / divisor : 0;
+    }
+    // Shopee: iteração (começa com estimativa sem taxa fixa)
+    let p = custoBase / (1 - (comPct / 100) - (impPct / 100) - (margDes / 100));
+    for (let i = 0; i < 10; i++) {
+      const com = shopeeComissao(p);
+      const impV = p * (impPct / 100);
+      const margV = p * (margDes / 100);
+      p = custoBase + com.valor + impV + margV;
+    }
+    return p;
+  }
+
+  // ── Peso cobrado (real ou cubado) ──
+  const pesoReal = parseFloat(document.getElementById('peso_real').value) || 0;
+  const dc = parseFloat(document.getElementById('dim_c').value) || 0;
+  const dl = parseFloat(document.getElementById('dim_l').value) || 0;
+  const da = parseFloat(document.getElementById('dim_a').value) || 0;
+  const pesoCubado = (dc > 0 && dl > 0 && da > 0) ? calcPesoCubado(dc, dl, da) : 0;
+  const pesoCobrado = Math.max(pesoReal, pesoCubado, 0.001);
+  const temPeso = pesoReal > 0 || pesoCubado > 0;
+
+  // ── Frete estimado (iterativo se não calculado ainda) ──
+  let freteGratis = _freteGratis;
+  let fretePago   = _fretePago;
+  let freteEstimado = false;
+
+  if (freteGratis <= 0 && divisor > 0) {
+    freteEstimado = true;
+    // 1ª estimativa: preço sem frete para achar coluna
+    const precoSemFrete = precoSugeridoCalc(custo);
+    const col1 = colPreco(precoSemFrete);
+    const frete1 = buscarFrete(pesoCobrado, col1);
+    // 2ª passagem: refina com frete incluído
+    const precoComFrete1 = precoSugeridoCalc(custo + frete1);
+    const col2 = colPreco(precoComFrete1);
+    freteGratis = buscarFrete(pesoCobrado, col2);
+    fretePago   = buscarFrete(pesoCobrado, Math.min(col2, 2));
+  }
+
+  // ── Preço sugerido: frete grátis sempre embutido ──
+  // Fórmula: preco = (custo + frete) / (1 - com% - imp% - marg%)
+  const custoTotal  = custo + freteGratis;
+  let precoSugerido = precoSugeridoCalc(custoTotal);
+
+  // Preço real: manual se preenchido, senão sugerido
+  const preco = precoManual > 0 ? precoManual : precoSugerido;
+
+  // ── Box preço sugerido ──
+  const psBox = document.getElementById('preco-sugerido-box');
+  if (precoSugerido > 0) {
+    psBox.style.display = 'flex';
+    document.getElementById('ps-valor').textContent = fmt(precoSugerido);
+    document.getElementById('ps-margem-label').textContent = margDes;
+    const impostoVal = precoSugerido * (impPct / 100);
+    const comVal     = getComissao(precoSugerido);
+    const lucroVal   = precoSugerido - custo - freteGratis - impostoVal - comVal;
+    const obsEst     = freteEstimado ? ' <span style="color:#f59e0b;font-size:10px;">(frete estimado — preencha o peso para precisão)</span>' : '';
+    const nomeFreteLabel = calcPlat === 'ml' ? 'Frete ML' : 'Frete Shopee';
+    document.getElementById('ps-detalhe').innerHTML =
+      `Custo produto: ${fmt(custo)} &nbsp;|&nbsp; ${nomeFreteLabel}: ${fmt(freteGratis)}${obsEst}<br>` +
+      `Imposto ${impPct}%: ${fmt(impostoVal)} &nbsp;|&nbsp; Comissão: ${fmt(comVal)} &nbsp;|&nbsp; Lucro: <strong style="color:#22c55e">${fmt(lucroVal)}</strong>`;
+  } else {
+    psBox.style.display = 'none';
+  }
+
+  if (preco <= 0) { document.getElementById('cenarios-frete').style.display = 'none'; return; }
+
+  // ── Métricas com preço real ──
+  const imposto  = preco * (impPct / 100);
+  const comissao = getComissao(preco);
+  const lucro    = preco - custo - freteGratis - imposto - comissao;
+  const margem   = (lucro / preco) * 100;
+  const roi      = (lucro / custoTotal) * 100;
+  const breakEven = precoSugeridoCalc(custoTotal);
+
+  document.getElementById('v-lucro').textContent  = fmt(lucro);
+  document.getElementById('v-margem').textContent = margem.toFixed(1) + '%';
+  document.getElementById('v-roi').textContent    = roi.toFixed(1) + '%';
+  document.getElementById('v-break').textContent  = fmt(breakEven);
+
+  const mc = margem >= 25 ? 'ok' : margem >= 12 ? 'warn' : 'bad';
+  const rc = roi >= 40 ? 'ok' : roi >= 20 ? 'warn' : 'bad';
+  document.getElementById('m-lucro').className  = 'metrica ' + mc;
+  document.getElementById('m-margem').className = 'metrica ' + mc;
+  document.getElementById('m-roi').className    = 'metrica ' + rc;
+  document.getElementById('m-break').className  = 'metrica';
+
+  // ── Cenários (sempre visível quando custo preenchido) ──
+  document.getElementById('cenarios-frete').style.display = 'grid';
+  const obsF = freteEstimado ? ' *' : '';
+
+  // 🟢 Frete grátis
+  const lucroG  = preco - custo - freteGratis - imposto - comissao;
+  const margemG = (lucroG / preco) * 100;
+  document.getElementById('cg-custo').textContent  = fmt(custo);
+  document.getElementById('cg-imp').textContent    = fmt(imposto);
+  document.getElementById('cg-frete').textContent  = fmt(freteGratis) + obsF;
+  document.getElementById('cg-com').textContent    = fmt(comissao);
+  document.getElementById('cg-lucro').textContent  = fmt(lucroG);
+  document.getElementById('cg-margem').textContent = margemG.toFixed(1) + '%';
+
+  // 🔵 Comprador paga frete
+  const lucroP  = preco - custo - fretePago - imposto - comissao;
+  const margemP = (lucroP / preco) * 100;
+  document.getElementById('cp-custo').textContent  = fmt(custo);
+  document.getElementById('cp-imp').textContent    = fmt(imposto);
+  document.getElementById('cp-frete').textContent  = fmt(fretePago) + obsF;
+  document.getElementById('cp-com').textContent    = fmt(comissao);
+  document.getElementById('cp-lucro').textContent  = fmt(lucroP);
+  document.getElementById('cp-margem').textContent = margemP.toFixed(1) + '%';
+
+  calcFreteShopee();
+  window._calcMargemEmAndamento = false;
+}
+
+// ── FRETE SHOPEE ──
+// Tabela de custo estimado por peso (Sudeste/Sul — referência)
+// Fonte: yav.com.br/blog, precisaofinanceira.com.br — vigente 01/03/2026
+const SHOPEE_FRETE = [
+  { max: 0.3,  custo: 14 },
+  { max: 0.5,  custo: 17 },
+  { max: 1,    custo: 22 },
+  { max: 2,    custo: 28 },
+  { max: 3,    custo: 35 },
+  { max: 5,    custo: 45 },
+  { max: 7,    custo: 55 },
+  { max: 10,   custo: 65 },
+  { max: 15,   custo: 80 },
+  { max: 20,   custo: 95 },
+  { max: 30,   custo: 115 },
+  { max: Infinity, custo: 140 }
+];
+
+function calcFreteShopee() {
+  const pesoReal = parseFloat(document.getElementById('peso_real').value) || 0;
+  const dc = parseFloat(document.getElementById('dim_c').value) || 0;
+  const dl = parseFloat(document.getElementById('dim_l').value) || 0;
+  const da = parseFloat(document.getElementById('dim_a').value) || 0;
+  const pesoCubado = (dc > 0 && dl > 0 && da > 0) ? calcPesoCubado(dc, dl, da) : 0;
+  const peso = Math.max(pesoReal, pesoCubado, 0);
+
+  // Preço de venda para calcular subsídio
+  const precoVenda = parseFloat(document.getElementById('preco_venda').value) ||
+                     parseFloat(document.getElementById('ps-valor')?.textContent?.replace('R$ ','').replace(',','.')) || 0;
+
+  if (peso <= 0) {
+    document.getElementById('sh-frete-real').textContent = '—';
+    document.getElementById('sh-subsidio').textContent   = '—';
+    document.getElementById('sh-seu-custo').textContent  = '—';
+    document.getElementById('sh-frete-obs').textContent  = 'Preencha o peso do produto para calcular.';
+    return;
+  }
+
+  // Custo real estimado
+  let freteReal = SHOPEE_FRETE[SHOPEE_FRETE.length - 1].custo;
+  for (const f of SHOPEE_FRETE) {
+    if (peso <= f.max) { freteReal = f.custo; break; }
+  }
+
+  // Subsídio por faixa de preço
+  let subsidio = 20;
+  if (precoVenda >= 200) subsidio = 40;
+  else if (precoVenda >= 80) subsidio = 30;
+
+  const seucusto = Math.max(0, freteReal - subsidio);
+
+  document.getElementById('sh-frete-real').textContent = fmt(freteReal);
+  document.getElementById('sh-subsidio').textContent   = fmt(subsidio);
+  document.getElementById('sh-seu-custo').textContent  = fmt(seucusto);
+
+  let obs = `Peso cobrado: ${peso.toFixed(2)} kg · Frete real estimado: ${fmt(freteReal)} · Shopee cobre: ${fmt(subsidio)}`;
+  if (seucusto <= 0) {
+    obs += ' ✅ Subsídio cobre 100% do frete nessa faixa de preço.';
+    document.getElementById('sh-met-destaque') && (document.querySelector('.sh-met-destaque .sh-met-val').style.color = '#22c55e');
+  } else {
+    obs += ` · Diferença que sai do seu bolso: ${fmt(seucusto)}`;
+  }
+  if (precoVenda <= 0) obs = `Peso: ${peso.toFixed(2)} kg · Preencha o preço de venda para ver o subsídio exato.`;
+  document.getElementById('sh-frete-obs').textContent = obs;
+}
+
+// ── CONCORRENTES ──
+async function buscarConcorrentes() {
+  const nome = document.getElementById('nome').value.trim();
+  if (!nome) { alert('Digite o nome do produto primeiro.'); return; }
+
+  const btnConc = document.getElementById('btnConc');
+  const loading = document.getElementById('conc-loading');
+  const resultado = document.getElementById('conc-resultado');
+
+  btnConc.disabled = true;
+  loading.style.display = 'block';
+  resultado.classList.remove('visible');
+
+  const marca = document.getElementById('marca').value.trim();
+  const modelo = document.getElementById('modelo').value.trim();
+  const busca = [nome, marca, modelo].filter(Boolean).join(' ');
+
+  const prompt = `Você é um assistente de pesquisa de preços para vendedores brasileiros no Mercado Livre.
+
+Pesquise agora no Mercado Livre Brasil os preços atuais de anúncios para: "${busca}"
+
+Com base nos resultados da busca, retorne SOMENTE JSON válido (sem markdown):
+{
+  "anuncios": [
+    {"nome": "título resumido do anúncio (max 60 chars)", "preco": 00.00, "vendedor": "nome do vendedor ou loja se disponível"},
+    ... (liste de 5 a 8 anúncios reais encontrados, com preços reais)
+  ],
+  "minimo": 00.00,
+  "maximo": 00.00,
+  "media": 00.00,
+  "posicionamento": "análise direta de 2-3 linhas: qual faixa de preço é mais competitiva, se tem espaço para entrar, e qual preço sugerido para competir bem no ML para esse produto específico"
+}
+
+Use apenas dados reais encontrados na busca. Se não encontrar resultados suficientes, coloque o que encontrou.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await resp.json();
+
+    // Pegar bloco de texto final (após web_search)
+    const textos = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const clean = textos.replace(/```json|```/g, '').trim();
+
+    // Extrair JSON do texto
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSON não encontrado');
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Renderizar métricas
+    document.getElementById('c-minimo').textContent = fmt(parsed.minimo || 0);
+    document.getElementById('c-maximo').textContent = fmt(parsed.maximo || 0);
+    document.getElementById('c-media').textContent  = fmt(parsed.media  || 0);
+    document.getElementById('c-qtd').textContent    = (parsed.anuncios || []).length + ' anúncios';
+
+    // Lista de anúncios
+    const lista = document.getElementById('conc-lista');
+    lista.innerHTML = '';
+    const anuncios = parsed.anuncios || [];
+    const precos = anuncios.map(a => a.preco).filter(p => p > 0);
+    const minP = Math.min(...precos);
+    const maxP = Math.max(...precos);
+
+    anuncios.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'conc-item';
+      let badgeClass = 'badge-medio', badgeText = 'Médio';
+      if (a.preco === minP) { badgeClass = 'badge-mais-barato'; badgeText = '↓ Mais barato'; }
+      else if (a.preco === maxP) { badgeClass = 'badge-mais-caro'; badgeText = '↑ Mais caro'; }
+      div.innerHTML = `
+        <span class="conc-item-nome">${a.nome}${a.vendedor ? ' <span style="color:#4b5563">· '+a.vendedor+'</span>' : ''}</span>
+        <span class="conc-item-preco">${fmt(a.preco)}</span>
+        <span class="conc-item-badge ${badgeClass}">${badgeText}</span>`;
+      lista.appendChild(div);
+    });
+
+    // Posicionamento
+    document.getElementById('posicionamento-box').innerHTML =
+      '💡 <strong>Análise:</strong> ' + (parsed.posicionamento || '');
+
+    // Preencher preço de venda sugerido com a média se campo estiver vazio
+    const precoVendaEl = document.getElementById('preco_venda');
+    if (!precoVendaEl.value && parsed.media > 0) {
+      precoVendaEl.value = parsed.media.toFixed(2);
+      calcMargem();
+    }
+
+    resultado.classList.add('visible');
+  } catch(err) {
+    alert('Erro ao buscar preços. Tente novamente.'); console.error(err);
+  } finally {
+    btnConc.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+// ── PLATAFORMA ──
+let plataforma = 'ambos';
+function setPlat(p) {
+  plataforma = p;
+  ['ml','shopee','ambos'].forEach(x => {
+    document.getElementById('btn-'+x).classList.toggle('active', x === p);
+  });
+}
+
+// ── TABS ──
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const map = {'tab-ml':'tbtn-ml','tab-shopee':'tbtn-shopee','tab-imagem':'tbtn-imagem'};
+  document.getElementById(map[id]).classList.add('active');
+}
+
+// ── GERADOR ──
+let tagsML = [];
+async function gerar() {
+  const nome = document.getElementById('nome').value.trim();
+  if (!nome) { alert('Digite o nome do produto.'); return; }
+  const cat = document.getElementById('categoria').value;
+  const marca = document.getElementById('marca').value.trim();
+  const modelo = document.getElementById('modelo').value.trim();
+  const specs = document.getElementById('specs').value.trim();
+  const pub = document.getElementById('publico').value.trim();
+  const dif = document.getElementById('diferenciais').value.trim();
+  const catL = {ferramentas:'Ferramentas Manuais',ferramentas_eletricas:'Ferramentas Elétricas',autopecas:'Peças Automotivas',utilidades:'Utilidades / Casa',epi:'EPI / Segurança',fixacao:'Fixação / Parafusos'};
+  const base = `Produto: ${nome}\nCategoria: ${catL[cat]}${marca?'\nMarca: '+marca:''}${modelo?'\nModelo: '+modelo:''}${specs?'\nSpecs: '+specs:''}${pub?'\nPúblico: '+pub:''}${dif?'\nDiferenciais: '+dif:''}`;
+  const gerarML = plataforma === 'ml' || plataforma === 'ambos';
+  const gerarSH = plataforma === 'shopee' || plataforma === 'ambos';
+
+  document.getElementById('btnGerar').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultsWrapper').classList.remove('visible');
+
+  try {
+    const calls = [];
+    if (gerarML) calls.push(chamarAPI(`Você é especialista em anúncios Mercado Livre Brasil (ferramentas/autopecas/utilidades).\n${base}\nRetorne SOMENTE JSON válido:\n{"titulo":"título ML até 60 chars, palavra-chave principal no início","modelo":"valor do campo Modelo da ficha técnica ML: referência técnica curta do produto, ex: 7R-17, 1600W, 3/8 pol — sem marca, sem descrição","palavras_buscadas":"as 8 a 10 principais palavras e termos que clientes buscam para encontrar esse produto no ML, separadas por vírgula, em até 120 caracteres no total, priorizando variações de nome e aplicação","bullets":"6 bullet points com emoji separados por \\n","descricao":"3 a 5 parágrafos profissionais sem markdown","tags":["15 palavras-chave para ML"]}`));
+    if (gerarSH) calls.push(chamarAPI(`Você é especialista em anúncios Shopee Brasil (ferramentas/autopecas/utilidades).\n${base}\nRetorne SOMENTE JSON válido:\n{"titulo":"título Shopee até 120 chars","descricao":"descrição Shopee com emojis, frases curtas, sem asteriscos","hashtags":"#hashtag1 #hashtag2 ... (15 hashtags em uma linha)"}`));
+    const res = await Promise.all(calls);
+    if (gerarML) renderML(res[0]);
+    if (gerarSH) renderShopee(res[gerarML ? 1 : 0]);
+    document.getElementById('prompt-imagem').textContent = `product photography, ${nome}${marca?', '+marca:''}, isolated on pure white background, professional studio lighting, sharp focus, high resolution, 1:1 ratio, e-commerce photo style, no shadows, centered object`;
+    document.getElementById('tbtn-ml').style.display = gerarML ? '' : 'none';
+    document.getElementById('tbtn-shopee').style.display = gerarSH ? '' : 'none';
+    document.getElementById('resultsWrapper').classList.add('visible');
+    showTab(gerarML ? 'tab-ml' : 'tab-shopee');
+  } catch(err) {
+    alert('Erro de conexão. Tente novamente.'); console.error(err);
+  } finally {
+    document.getElementById('btnGerar').disabled = false;
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+async function chamarAPI(prompt) {
+  const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+  const d = await r.json();
+  return JSON.parse(d.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim());
+}
+
+function renderML(p) {
+  if (!p) return;
+  const t = p.titulo || '';
+  document.getElementById('ml-titulo').textContent = t;
+  const len = t.length;
+  const el = document.getElementById('char-ml-titulo');
+  el.textContent = `${len}/60 caracteres`;
+  el.className = 'char-count '+(len<=60?'char-ok':len<=65?'char-warn':'char-bad');
+
+  // Campo Modelo
+  document.getElementById('ml-modelo').textContent = p.modelo || '';
+
+  // Palavras mais buscadas com contador 120 chars
+  const pb = p.palavras_buscadas || '';
+  document.getElementById('ml-buscadas').textContent = pb;
+  const pbLen = pb.length;
+  const pbEl = document.getElementById('char-ml-buscadas');
+  pbEl.textContent = `${pbLen}/120 caracteres`;
+  pbEl.className = 'char-count '+(pbLen<=120?'char-ok':pbLen<=130?'char-warn':'char-bad');
+
+  document.getElementById('ml-bullets').textContent = p.bullets||'';
+  document.getElementById('ml-descricao').textContent = p.descricao||'';
+  tagsML = p.tags||[];
+  const c = document.getElementById('ml-tags'); c.innerHTML='';
+  tagsML.forEach(t=>{const s=document.createElement('span');s.className='tag';s.textContent=t;c.appendChild(s);});
+}
+function renderShopee(p) {
+  if (!p) return;
+  const t = p.titulo||'';
+  document.getElementById('sh-titulo').textContent = t;
+  const len=t.length; const el=document.getElementById('char-sh-titulo');
+  el.textContent=`${len}/120 caracteres`; el.className='char-count '+(len<=120?'char-ok':'char-bad');
+  document.getElementById('sh-descricao').textContent=p.descricao||'';
+  document.getElementById('sh-hashtags').textContent=p.hashtags||'';
+}
+function copiar(id,btn){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{btn.textContent='✓ Copiado';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);});
+}
+function copiarTags(plat,btn){
+  navigator.clipboard.writeText(tagsML.join(', ')).then(()=>{btn.textContent='✓ Copiadas';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copiar todas';btn.classList.remove('copied');},2000);});
+}
+document.getElementById('nome').addEventListener('keydown',e=>{if(e.key==='Enter')gerar();});
+setPlat('ambos');
+
+// ── STORAGE — histórico de produtos ──
+const STORAGE_KEY = 'gerador_ml_historico';
+
+function salvarHistorico(dados) {
+  try {
+    const hist = carregarHistorico();
+    // Evita duplicar mesmo produto
+    const idx = hist.findIndex(h => h.nome === dados.nome);
+    if (idx >= 0) hist.splice(idx, 1);
+    hist.unshift({ ...dados, salvo_em: new Date().toLocaleString('pt-BR') });
+    // Mantém só os últimos 20
+    if (hist.length > 20) hist.pop();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+  } catch(e) { console.warn('Storage indisponível:', e); }
+}
+
+function carregarHistorico() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch { return []; }
+}
+
+function abrirHistorico() {
+  const hist = carregarHistorico();
+  const lista = document.getElementById('hist-lista');
+  const vazio = document.getElementById('hist-vazio');
+  lista.innerHTML = '';
+  if (hist.length === 0) {
+    vazio.style.display = 'block';
+  } else {
+    vazio.style.display = 'none';
+    hist.forEach((h, i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:#0f1117;border:1px solid #1e2230;border-radius:8px;padding:12px;cursor:pointer;transition:border-color .15s;';
+      div.onmouseenter = () => div.style.borderColor = '#FFE600';
+      div.onmouseleave = () => div.style.borderColor = '#1e2230';
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px;">${h.nome}</div>
+            ${h.marca ? `<div style="font-size:11px;color:#6b7280;">${h.marca}${h.modelo?' · '+h.modelo:''}</div>` : ''}
+            <div style="font-size:10px;color:#4b5563;margin-top:4px;">💾 ${h.salvo_em}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="restaurarProduto(${i})" style="background:#FFE600;border:none;color:#0f1117;font-size:11px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;">Carregar</button>
+            <button onclick="removerHistorico(${i},this)" style="background:transparent;border:1px solid #374151;color:#9ca3af;font-size:11px;padding:5px 8px;border-radius:5px;cursor:pointer;">✕</button>
+          </div>
+        </div>`;
+      lista.appendChild(div);
+    });
+  }
+  document.getElementById('modal-hist').style.display = 'block';
+}
+
+function fecharHistorico() {
+  document.getElementById('modal-hist').style.display = 'none';
+}
+
+function restaurarProduto(idx) {
+  const hist = carregarHistorico();
+  const h = hist[idx];
+  if (!h) return;
+  // Preenche os campos do formulário
+  const set = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val || ''; };
+  set('nome', h.nome);
+  set('marca', h.marca);
+  set('modelo', h.modelo);
+  set('specs', h.specs);
+  set('publico', h.publico);
+  set('diferenciais', h.diferenciais);
+  set('custo', h.custo);
+  set('comissao', h.comissao);
+  set('imposto', h.imposto);
+  set('margem_desejada', h.margem_desejada);
+  set('peso_real', h.peso_real);
+  set('dim_c', h.dim_c);
+  set('dim_l', h.dim_l);
+  set('dim_a', h.dim_a);
+  if (h.categoria) document.getElementById('categoria').value = h.categoria;
+  fecharHistorico();
+  calcMargem();
+  if (h.peso_real) calcFrete();
+  // Scrolla para o topo
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function removerHistorico(idx, btn) {
+  const hist = carregarHistorico();
+  hist.splice(idx, 1);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+  btn.closest('div[style]').remove();
+  if (hist.length === 0) document.getElementById('hist-vazio').style.display = 'block';
+}
+
+function limparHistorico() {
+  if (!confirm('Apagar todo o histórico?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('hist-lista').innerHTML = '';
+  document.getElementById('hist-vazio').style.display = 'block';
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('modal-hist').addEventListener('click', function(e) {
+  if (e.target === this) fecharHistorico();
+});
+
+// ── DOWNLOAD DA FERRAMENTA ──
+function baixarFerrAmenta() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'gerador-anuncios-ml.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Salva automaticamente ao gerar (hook na função gerar existente)
+const _gerarOriginal = gerar;
+gerar = async function() {
+  await _gerarOriginal();
+  // Salva dados do produto no histórico após gerar
+  try {
+    const dados = {
+      nome:           document.getElementById('nome').value.trim(),
+      marca:          document.getElementById('marca').value.trim(),
+      modelo:         document.getElementById('modelo').value.trim(),
+      specs:          document.getElementById('specs').value.trim(),
+      publico:        document.getElementById('publico').value.trim(),
+      diferenciais:   document.getElementById('diferenciais').value.trim(),
+      categoria:      document.getElementById('categoria').value,
+      custo:          document.getElementById('custo').value,
+      comissao:       document.getElementById('comissao').value,
+      imposto:        document.getElementById('imposto').value,
+      margem_desejada:document.getElementById('margem_desejada').value,
+      peso_real:      document.getElementById('peso_real').value,
+      dim_c:          document.getElementById('dim_c').value,
+      dim_l:          document.getElementById('dim_l').value,
+      dim_a:          document.getElementById('dim_a').value,
+    };
+    if (dados.nome) salvarHistorico(dados);
+  } catch(e) {}
+};
+</script>
+</body>
+</html>
