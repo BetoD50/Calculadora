@@ -454,6 +454,73 @@ select option { background: #141824; }
     <div class="com-info" id="com-info-texto"></div>
   </div>
 
+  <!-- PROMOÇÃO / CUPOM / AFILIADO / ADS -->
+  <div class="card" id="card-promo" style="display:none;">
+    <div class="card-title" style="color:#a78bfa;">🎯 Promoção · Cupom · Afiliado · Ads</div>
+    <div class="grid-3" style="margin-bottom:11px;">
+      <div>
+        <label>Promoção / Desconto (%)</label>
+        <input type="number" id="promo_pct" value="0" step="0.5" min="0" max="80" oninput="calcPromo()" />
+      </div>
+      <div>
+        <label>Cupom (%)</label>
+        <input type="number" id="cupom_pct" value="0" step="0.5" min="0" max="50" oninput="calcPromo()" />
+      </div>
+      <div>
+        <label>Afiliado (%)</label>
+        <input type="number" id="afiliado_pct" value="0" step="0.5" min="0" max="30" oninput="calcPromo()" />
+      </div>
+    </div>
+
+    <!-- RESULTADO PROMOÇÃO -->
+    <div id="promo-resultado" style="display:none;">
+      <!-- Preço com desconto -->
+      <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Preço com desconto</div>
+            <div style="font-size:24px;font-weight:900;color:#fff;" id="p-preco-desc">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Desconto total aplicado</div>
+            <div style="font-size:16px;font-weight:700;color:#f87171;" id="p-desc-total">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas após promoção -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;" id="promo-metricas">
+        <div class="metrica" id="pm-lucro"><div class="metrica-val" id="pv-lucro">—</div><div class="metrica-label">Lucro restante</div></div>
+        <div class="metrica" id="pm-margem"><div class="metrica-val" id="pv-margem">—</div><div class="metrica-label">Margem restante</div></div>
+        <div class="metrica" id="pm-afiliado"><div class="metrica-val" id="pv-afiliado">—</div><div class="metrica-label">Custo afiliado</div></div>
+        <div class="metrica" id="pm-sobra"><div class="metrica-val" id="pv-sobra">—</div><div class="metrica-label">Sobra p/ Ads</div></div>
+      </div>
+
+      <!-- Box Ads -->
+      <div id="box-ads" style="border-radius:10px;padding:14px;border:1.5px solid #a78bfa;background:#0d0b1a;">
+        <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📢 Capacidade de Ads</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;" id="ads-max-r">—</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px;">Máximo em R$</div>
+            <div style="font-size:10px;color:#4b5563;margin-top:1px;">sem perder dinheiro</div>
+          </div>
+          <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;" id="ads-max-pct">—</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px;">TACOS máximo</div>
+            <div style="font-size:10px;color:#4b5563;margin-top:1px;">% sobre o preço</div>
+          </div>
+          <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#22c55e;" id="ads-saudavel-pct">—</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px;">TACOS saudável</div>
+            <div style="font-size:10px;color:#4b5563;margin-top:1px;">ainda lucrativo</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.6;" id="ads-obs"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -555,6 +622,69 @@ function setTipoAnuncio(tipo) {
     btnC.style.borderColor = '#2a2f3e'; btnC.style.color = '#6b7280'; btnC.style.background = 'transparent';
   }
   calc();
+}
+
+// ── PROMOÇÃO / CUPOM / AFILIADO / ADS ──
+function calcPromo() {
+  const precoBase = parseFloat(document.getElementById('res-preco').textContent.replace('R$ ','').replace(',','.')) || 0;
+  if (precoBase <= 0) return;
+
+  const promoPct    = parseFloat(document.getElementById('promo_pct').value) || 0;
+  const cupomPct    = parseFloat(document.getElementById('cupom_pct').value) || 0;
+  const afiliadoPct = parseFloat(document.getElementById('afiliado_pct').value) || 0;
+
+  // Preço com desconto (promoção + cupom sobre preço original)
+  const descTotal   = precoBase * (promoPct / 100) + precoBase * (cupomPct / 100);
+  const precoDesc   = precoBase - descTotal;
+
+  // Custos fixos (frete, imposto, comissão ML, custo produto) — já calculados
+  const lucroBase = parseFloat(document.getElementById('v-lucro').textContent.replace('R$ ','').replace(',','.')) || 0;
+
+  // Custo afiliado sobre preço com desconto
+  const custoAfiliado = precoDesc * (afiliadoPct / 100);
+
+  // Lucro restante após promoção + afiliado
+  const lucroRestante = lucroBase - descTotal - custoAfiliado;
+  const margemRestante = precoDesc > 0 ? (lucroRestante / precoDesc) * 100 : 0;
+
+  // Capacidade de ads = lucro restante (máximo sem perder dinheiro)
+  const adsMaxR   = Math.max(0, lucroRestante);
+  const adsMaxPct = precoDesc > 0 ? (adsMaxR / precoDesc) * 100 : 0;
+  // TACOS saudável = deixa pelo menos 10% de margem líquida
+  const margemMinima = 10;
+  const adsSaudavelR = Math.max(0, lucroRestante - precoDesc * (margemMinima / 100));
+  const adsSaudavelPct = precoDesc > 0 ? (adsSaudavelR / precoDesc) * 100 : 0;
+
+  // Renderizar
+  document.getElementById('p-preco-desc').textContent = fmt(precoDesc);
+  document.getElementById('p-desc-total').textContent = '-' + fmt(descTotal) + ' (' + (promoPct + cupomPct).toFixed(1) + '%)';
+
+  document.getElementById('pv-lucro').textContent    = fmt(lucroRestante);
+  document.getElementById('pv-margem').textContent   = margemRestante.toFixed(1) + '%';
+  document.getElementById('pv-afiliado').textContent = fmt(custoAfiliado);
+  document.getElementById('pv-sobra').textContent    = fmt(adsMaxR);
+
+  const corLucro = lucroRestante >= 0 ? (margemRestante >= 15 ? 'ok' : 'warn') : 'bad';
+  document.getElementById('pm-lucro').className  = 'metrica ' + corLucro;
+  document.getElementById('pm-margem').className = 'metrica ' + corLucro;
+  document.getElementById('pm-sobra').className  = 'metrica ' + (adsMaxR > 0 ? 'ok' : 'bad');
+  document.getElementById('pm-afiliado').className = 'metrica';
+
+  document.getElementById('ads-max-r').textContent       = fmt(adsMaxR);
+  document.getElementById('ads-max-pct').textContent     = adsMaxPct.toFixed(1) + '%';
+  document.getElementById('ads-saudavel-pct').textContent = adsSaudavelPct.toFixed(1) + '%';
+
+  let obs = '';
+  if (lucroRestante < 0) {
+    obs = '⛔ Com essa combinação de descontos você está perdendo dinheiro por unidade. Reduza promoção, cupom ou afiliado.';
+  } else if (margemRestante < 10) {
+    obs = '⚠️ Margem muito apertada. Qualquer custo de ads vai gerar prejuízo. Cuidado.';
+  } else {
+    obs = `✅ Você pode gastar até <strong>${fmt(adsMaxR)}</strong> em ads por unidade sem prejuízo. `
+        + `Para manter margem de ${margemMinima}%, o TACOS máximo recomendado é <strong>${adsSaudavelPct.toFixed(1)}%</strong>.`;
+  }
+  document.getElementById('ads-obs').innerHTML = obs;
+  document.getElementById('promo-resultado').style.display = 'block';
 }
 
 // ── PLATAFORMA ──
@@ -708,6 +838,8 @@ function calc() {
 
   // Resultado principal
   rp.classList.add('visible');
+  document.getElementById('card-promo').style.display = 'block';
+  calcPromo();
   document.getElementById('res-label').textContent =
     `💡 Preço sugerido — margem de ${margDes}% (${plat==='ml'?'ML':plat==='sh'?'Shopee':'TikTok Shop'})`;
   document.getElementById('res-preco').textContent = fmt(precoSug);
