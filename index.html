@@ -499,7 +499,7 @@ select option { background: #141824; }
       <!-- Box Ads -->
       <div id="box-ads" style="border-radius:10px;padding:14px;border:1.5px solid #a78bfa;background:#0d0b1a;">
         <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📢 Capacidade de Ads</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
           <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
             <div style="font-size:18px;font-weight:800;" id="ads-max-r">—</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px;">Máximo em R$</div>
@@ -508,7 +508,7 @@ select option { background: #141824; }
           <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
             <div style="font-size:18px;font-weight:800;" id="ads-max-pct">—</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px;">TACOS máximo</div>
-            <div style="font-size:10px;color:#4b5563;margin-top:1px;">% sobre o preço</div>
+            <div style="font-size:10px;color:#4b5563;margin-top:1px;">% sobre receita total</div>
           </div>
           <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
             <div style="font-size:18px;font-weight:800;color:#22c55e;" id="ads-saudavel-pct">—</div>
@@ -517,6 +517,46 @@ select option { background: #141824; }
           </div>
         </div>
         <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.6;" id="ads-obs"></div>
+
+        <!-- ACOS / TACOS REAL -->
+        <div style="border-top:1px solid #1a1f2e;margin-top:14px;padding-top:14px;">
+          <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📊 Calcular ACOS e TACOS Real <span style="color:#4b5563;font-weight:400;text-transform:none;">(do seu painel de ads)</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label>Gasto em Ads (R$)</label>
+              <input type="number" id="ads_gasto" placeholder="0,00" step="0.01" min="0" oninput="calcAcos()" />
+            </div>
+            <div>
+              <label>Receita gerada pelos Ads (R$)</label>
+              <input type="number" id="ads_receita_ads" placeholder="0,00" step="0.01" min="0" oninput="calcAcos()" />
+            </div>
+            <div>
+              <label>Receita total (orgânico + Ads) (R$)</label>
+              <input type="number" id="ads_receita_total" placeholder="0,00" step="0.01" min="0" oninput="calcAcos()" />
+            </div>
+          </div>
+
+          <div id="acos-resultado" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;" id="box-acos">
+                <div style="font-size:22px;font-weight:800;" id="val-acos">—</div>
+                <div style="font-size:10px;color:#6b7280;margin-top:2px;">ACOS</div>
+                <div style="font-size:10px;color:#4b5563;margin-top:1px;">custo ads / receita ads</div>
+              </div>
+              <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;" id="box-tacos">
+                <div style="font-size:22px;font-weight:800;" id="val-tacos">—</div>
+                <div style="font-size:10px;color:#6b7280;margin-top:2px;">TACOS</div>
+                <div style="font-size:10px;color:#4b5563;margin-top:1px;">custo ads / receita total</div>
+              </div>
+              <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;text-align:center;">
+                <div style="font-size:22px;font-weight:800;color:#60a5fa;" id="val-roas">—</div>
+                <div style="font-size:10px;color:#6b7280;margin-top:2px;">ROAS</div>
+                <div style="font-size:10px;color:#4b5563;margin-top:1px;">receita ads / custo ads</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.6;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;padding:10px;" id="acos-obs"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -622,6 +662,54 @@ function setTipoAnuncio(tipo) {
     btnC.style.borderColor = '#2a2f3e'; btnC.style.color = '#6b7280'; btnC.style.background = 'transparent';
   }
   calc();
+}
+
+// ── ACOS / TACOS REAL ──
+function calcAcos() {
+  const gasto        = parseFloat(document.getElementById('ads_gasto').value) || 0;
+  const receitaAds   = parseFloat(document.getElementById('ads_receita_ads').value) || 0;
+  const receitaTotal = parseFloat(document.getElementById('ads_receita_total').value) || 0;
+
+  if (gasto <= 0) { document.getElementById('acos-resultado').style.display = 'none'; return; }
+  document.getElementById('acos-resultado').style.display = 'block';
+
+  // ACOS = gasto / receita ads
+  const acos  = receitaAds > 0 ? (gasto / receitaAds) * 100 : 0;
+  // TACOS = gasto / receita total
+  const tacos = receitaTotal > 0 ? (gasto / receitaTotal) * 100 : 0;
+  // ROAS = receita ads / gasto
+  const roas  = gasto > 0 ? receitaAds / gasto : 0;
+
+  document.getElementById('val-acos').textContent  = receitaAds > 0 ? acos.toFixed(1) + '%' : '—';
+  document.getElementById('val-tacos').textContent = receitaTotal > 0 ? tacos.toFixed(1) + '%' : '—';
+  document.getElementById('val-roas').textContent  = receitaAds > 0 ? roas.toFixed(2) + 'x' : '—';
+
+  // Cores ACOS
+  const corAcos = acos <= 15 ? '#22c55e' : acos <= 30 ? '#f59e0b' : '#ef4444';
+  document.getElementById('val-acos').style.color = receitaAds > 0 ? corAcos : '#fff';
+  const corTacos = tacos <= 10 ? '#22c55e' : tacos <= 20 ? '#f59e0b' : '#ef4444';
+  document.getElementById('val-tacos').style.color = receitaTotal > 0 ? corTacos : '#fff';
+
+  // Análise
+  let obs = '';
+  if (receitaAds <= 0 && receitaTotal <= 0) {
+    obs = 'Preencha a receita gerada pelos ads e a receita total para ver ACOS e TACOS.';
+  } else {
+    if (receitaAds > 0) {
+      obs += acos <= 15 ? `✅ ACOS de ${acos.toFixed(1)}% — excelente, seus ads estão muito eficientes. ` :
+             acos <= 30 ? `⚠️ ACOS de ${acos.toFixed(1)}% — aceitável, mas há espaço para otimizar. ` :
+                          `⛔ ACOS de ${acos.toFixed(1)}% — alto, você está gastando muito por real gerado pelos ads. `;
+    }
+    if (receitaTotal > 0) {
+      obs += tacos <= 10 ? `✅ TACOS de ${tacos.toFixed(1)}% — saudável sobre a receita total. ` :
+             tacos <= 20 ? `⚠️ TACOS de ${tacos.toFixed(1)}% — atenção, ads estão pesando na receita total. ` :
+                           `⛔ TACOS de ${tacos.toFixed(1)}% — crítico, ads consumindo mais de 20% da receita total. `;
+    }
+    if (receitaAds > 0) {
+      obs += `ROAS de ${roas.toFixed(2)}x significa que para cada R$ 1 gasto em ads, você gerou R$ ${roas.toFixed(2)} em receita.`;
+    }
+  }
+  document.getElementById('acos-obs').innerHTML = obs;
 }
 
 // ── PROMOÇÃO / CUPOM / AFILIADO / ADS ──
