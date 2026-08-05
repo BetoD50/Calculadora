@@ -768,9 +768,8 @@ function set(valId, val, metId, cls){
   document.getElementById(metId).className = 'metrica ' + cls;
 }
 
-// ═══════════════════════════════════
+
 // BUSCA DE CATEGORIA ML
-// ═══════════════════════════════════
 
 let catTimer = null;
 let classicoBase = 12;
@@ -782,59 +781,74 @@ function debunceBuscarCat() {
 }
 
 async function buscarCategoria() {
-  const q = document.getElementById("cat-search").value.trim();
-  const results = document.getElementById("cat-results");
-  if (q.length < 3) { results.style.display = "none"; return; }
-  results.style.display = "block";
-  results.innerHTML = "<div style="padding:10px;color:#6b7280;font-size:12px;">Buscando...</div>";
+  var q = (document.getElementById('cat-search').value || '').trim();
+  var results = document.getElementById('cat-results');
+  if (q.length < 3) { results.style.display = 'none'; return; }
+  results.style.display = 'block';
+  results.innerHTML = '<p style="padding:10px;color:#6b7280;font-size:12px;">Buscando...</p>';
   try {
-    const res = await fetch(APPS_SCRIPT_URL + "?action=search_cat&q=" + encodeURIComponent(q));
-    const data = await res.json();
-    if (!data || data.error || !Array.isArray(data)) {
-      results.innerHTML = "<div style="padding:10px;color:#ef4444;font-size:12px;">Nenhuma categoria encontrada.</div>";
+    var res = await fetch(APPS_SCRIPT_URL + '?action=search_cat&q=' + encodeURIComponent(q));
+    var data = await res.json();
+    if (!data || data.error || !Array.isArray(data) || data.length === 0) {
+      results.innerHTML = '<p style="padding:10px;color:#ef4444;font-size:12px;">Nenhuma categoria encontrada.</p>';
       return;
     }
-    results.innerHTML = data.map(function(cat) {
-      var nome = (cat.domain_name || cat.category_name || cat.category_id).replace(/"/g, "");
-      var catNome = (cat.category_name || "").replace(/"/g, "");
-      return "<div onclick="selecionarCategoria( + cat.category_id + , + nome + )" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #1a1f2e;font-size:13px;color:#e2e8f0;" onmouseover="this.style.background='#2a2f3e'" onmouseout="this.style.background='transparent'"><div style="font-weight:600;">" + nome + "</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">" + catNome + " - " + cat.category_id + "</div></div>";
-    }).join("");
+    results.innerHTML = '';
+    data.forEach(function(cat) {
+      var nome = (cat.domain_name || cat.category_name || cat.category_id || '');
+      var catNome = (cat.category_name || '');
+      var catId = (cat.category_id || '');
+      var div = document.createElement('div');
+      div.style.cssText = 'padding:10px 12px;cursor:pointer;border-bottom:1px solid #1a1f2e;font-size:13px;color:#e2e8f0;';
+      div.dataset.catId = catId;
+      div.dataset.nome = nome;
+      div.innerHTML = '<div style="font-weight:600;">' + nome + '</div><div style="font-size:11px;color:#6b7280;">' + catNome + '</div>';
+      div.onmouseover = function() { this.style.background = '#2a2f3e'; };
+      div.onmouseout = function() { this.style.background = 'transparent'; };
+      div.onclick = function() { selecionarCategoria(this.dataset.catId, this.dataset.nome); };
+      results.appendChild(div);
+    });
   } catch(e) {
-    results.innerHTML = "<div style="padding:10px;color:#ef4444;font-size:12px;">Erro na busca.</div>";
+    results.innerHTML = '<p style="padding:10px;color:#ef4444;font-size:12px;">Erro: ' + e.message + '</p>';
   }
 }
 
 async function selecionarCategoria(catId, nome) {
-  document.getElementById("cat-results").style.display = "none";
-  document.getElementById("cat-search").value = nome;
-  var sel = document.getElementById("cat-selecionada");
-  sel.style.display = "block";
-  sel.innerHTML = "Buscando taxas para: <strong>" + nome + "</strong>";
+  document.getElementById('cat-results').style.display = 'none';
+  document.getElementById('cat-search').value = nome;
+  var sel = document.getElementById('cat-selecionada');
+  if (!sel) return;
+  sel.style.display = 'block';
+  sel.textContent = 'Buscando taxas para: ' + nome;
   try {
-    var preco = parseFloat(document.getElementById("preco_venda").value) || parseFloat(document.getElementById("custo").value) * 2 || 100;
-    var res = await fetch(APPS_SCRIPT_URL + "?action=get_fee&cat_id=" + catId + "&price=" + preco);
+    var preco = parseFloat(document.getElementById('preco_venda').value) || 100;
+    var res = await fetch(APPS_SCRIPT_URL + '?action=get_fee&cat_id=' + catId + '&price=' + preco);
     var data = await res.json();
-    if (data.classico_pct) {
+    if (data && data.classico_pct) {
       classicoBase = data.classico_pct;
       premiumBase = data.premium_pct;
-      document.getElementById("lbl-classico").textContent = classicoBase + "%";
-      document.getElementById("lbl-premium").textContent = premiumBase + "%";
-      document.getElementById("com-info-ml").innerHTML = "Categoria: <strong>" + nome + "</strong> - Classico: <strong style="color:#FFE600">" + classicoBase + "%</strong> - Premium: <strong style="color:#FFE600">" + premiumBase + "%</strong>";
-      sel.innerHTML = "Categoria: <strong>" + nome + "</strong> - Classico: " + classicoBase + "% - Premium: " + premiumBase + "%";
-      var isTipoPremium = parseFloat(document.getElementById("ml-com-pct").value) > 14;
-      setTipoAnuncio(isTipoPremium ? "premium" : "classico");
+      var lblC = document.getElementById('lbl-classico');
+      var lblP = document.getElementById('lbl-premium');
+      if (lblC) lblC.textContent = classicoBase + '%';
+      if (lblP) lblP.textContent = premiumBase + '%';
+      var infoEl = document.getElementById('com-info-ml');
+      if (infoEl) infoEl.textContent = 'Categoria: ' + nome + ' - Classico: ' + classicoBase + '% - Premium: ' + premiumBase + '%';
+      sel.textContent = 'OK: ' + nome + ' - Classico: ' + classicoBase + '% - Premium: ' + premiumBase + '%';
+      var isTipoPremium = parseFloat(document.getElementById('ml-com-pct').value) > 14;
+      setTipoAnuncio(isTipoPremium ? 'premium' : 'classico');
     } else {
-      sel.innerHTML = "Nao foi possivel obter a taxa exata. Usando padrao.";
+      sel.textContent = 'Nao foi possivel obter a taxa exata. Usando padrao.';
     }
   } catch(e) {
-    sel.innerHTML = "Erro ao buscar taxa. Mantendo valor atual.";
+    sel.textContent = 'Erro ao buscar taxa. Mantendo valor atual.';
   }
 }
 
-document.addEventListener("click", function(e) {
-  if (!e.target.closest("#cat-search") && !e.target.closest("#cat-results")) {
-    var r = document.getElementById("cat-results");
-    if (r) r.style.display = "none";
+document.addEventListener('click', function(e) {
+  var catResults = document.getElementById('cat-results');
+  var catSearch = document.getElementById('cat-search');
+  if (catResults && catSearch && !catSearch.contains(e.target) && !catResults.contains(e.target)) {
+    catResults.style.display = 'none';
   }
 });
 
