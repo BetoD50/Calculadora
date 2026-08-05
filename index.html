@@ -306,12 +306,20 @@ line-height: 1.6;
 <div style="padding-top:11px;border-top:1px solid #1a1f2e;">
 <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📊 Comissão da Plataforma</div>
 <div id="com-ml">
+<div style="margin-bottom:10px;">
+<label>🔍 Buscar categoria ML <span style="color:#374151">para comissão exata</span></label>
+<div style="position:relative;">
+<input type="text" id="cat-search" placeholder="Ex: ferramentas, parafuso, chave de fenda..." oninput="debunceBuscarCat()" autocomplete="off" style="width:100%;background:#0b0e14;border:1px solid #1e2533;border-radius:7px;color:#e2e8f0;font-size:14px;padding:9px 11px;outline:none;font-family:inherit;" />
+<div id="cat-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1f2e;border:1px solid #2a2f3e;border-radius:7px;z-index:100;max-height:220px;overflow-y:auto;margin-top:4px;"></div>
+</div>
+<div id="cat-selecionada" style="display:none;font-size:11px;color:#22c55e;margin-top:5px;padding:5px 8px;background:rgba(34,197,94,.08);border-radius:5px;border:1px solid rgba(34,197,94,.2);"></div>
+</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
 <div>
 <label>Tipo de anúncio</label>
 <div style="display:flex;gap:6px;margin-top:4px;">
-<button id="btn-classico" onclick="setTipoAnuncio('classico')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #FFE600;background:rgba(255,230,0,.08);color:#FFE600;font-size:12px;font-weight:700;cursor:pointer;">Clássico 12%</button>
-<button id="btn-premium" onclick="setTipoAnuncio('premium')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #2a2f3e;background:transparent;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;">Premium 17%</button>
+<button id="btn-classico" onclick="setTipoAnuncio('classico')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #FFE600;background:rgba(255,230,0,.08);color:#FFE600;font-size:12px;font-weight:700;cursor:pointer;">Clássico <span id="lbl-classico">12%</span></button>
+<button id="btn-premium" onclick="setTipoAnuncio('premium')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #2a2f3e;background:transparent;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;">Premium <span id="lbl-premium">17%</span></button>
 </div>
 </div>
 <div>
@@ -319,7 +327,7 @@ line-height: 1.6;
 <input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" />
 </div>
 </div>
-<div class="com-info">Clássico: 12% · Premium: 17% (ferramentas) · Ajuste conforme sua categoria se necessário.</div>
+<div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% (ferramentas) · Busque a categoria acima para ver a taxa exata.</div>
 </div>
 <div id="com-sh" style="display:none;">
 <div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16 &nbsp;|&nbsp; <strong>R$100–R$199,99:</strong> 14% + R$20<br><strong>R$200–R$499,99:</strong> 14% + R$26 &nbsp;|&nbsp; <strong>Acima R$500:</strong> 14% + R$26</div>
@@ -761,10 +769,80 @@ function set(valId, val, metId, cls){
 }
 
 // ═══════════════════════════════════
+// BUSCA DE CATEGORIA ML
+// ═══════════════════════════════════
+
+let catTimer = null;
+let classicoBase = 12;
+let premiumBase = 17;
+
+function debunceBuscarCat() {
+  clearTimeout(catTimer);
+  catTimer = setTimeout(buscarCategoria, 400);
+}
+
+async function buscarCategoria() {
+  const q = document.getElementById("cat-search").value.trim();
+  const results = document.getElementById("cat-results");
+  if (q.length < 3) { results.style.display = "none"; return; }
+  results.style.display = "block";
+  results.innerHTML = "<div style="padding:10px;color:#6b7280;font-size:12px;">Buscando...</div>";
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + "?action=search_cat&q=" + encodeURIComponent(q));
+    const data = await res.json();
+    if (!data || data.error || !Array.isArray(data)) {
+      results.innerHTML = "<div style="padding:10px;color:#ef4444;font-size:12px;">Nenhuma categoria encontrada.</div>";
+      return;
+    }
+    results.innerHTML = data.map(function(cat) {
+      var nome = (cat.domain_name || cat.category_name || cat.category_id).replace(/"/g, "");
+      var catNome = (cat.category_name || "").replace(/"/g, "");
+      return "<div onclick="selecionarCategoria( + cat.category_id + , + nome + )" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #1a1f2e;font-size:13px;color:#e2e8f0;" onmouseover="this.style.background='#2a2f3e'" onmouseout="this.style.background='transparent'"><div style="font-weight:600;">" + nome + "</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">" + catNome + " - " + cat.category_id + "</div></div>";
+    }).join("");
+  } catch(e) {
+    results.innerHTML = "<div style="padding:10px;color:#ef4444;font-size:12px;">Erro na busca.</div>";
+  }
+}
+
+async function selecionarCategoria(catId, nome) {
+  document.getElementById("cat-results").style.display = "none";
+  document.getElementById("cat-search").value = nome;
+  var sel = document.getElementById("cat-selecionada");
+  sel.style.display = "block";
+  sel.innerHTML = "Buscando taxas para: <strong>" + nome + "</strong>";
+  try {
+    var preco = parseFloat(document.getElementById("preco_venda").value) || parseFloat(document.getElementById("custo").value) * 2 || 100;
+    var res = await fetch(APPS_SCRIPT_URL + "?action=get_fee&cat_id=" + catId + "&price=" + preco);
+    var data = await res.json();
+    if (data.classico_pct) {
+      classicoBase = data.classico_pct;
+      premiumBase = data.premium_pct;
+      document.getElementById("lbl-classico").textContent = classicoBase + "%";
+      document.getElementById("lbl-premium").textContent = premiumBase + "%";
+      document.getElementById("com-info-ml").innerHTML = "Categoria: <strong>" + nome + "</strong> - Classico: <strong style="color:#FFE600">" + classicoBase + "%</strong> - Premium: <strong style="color:#FFE600">" + premiumBase + "%</strong>";
+      sel.innerHTML = "Categoria: <strong>" + nome + "</strong> - Classico: " + classicoBase + "% - Premium: " + premiumBase + "%";
+      var isTipoPremium = parseFloat(document.getElementById("ml-com-pct").value) > 14;
+      setTipoAnuncio(isTipoPremium ? "premium" : "classico");
+    } else {
+      sel.innerHTML = "Nao foi possivel obter a taxa exata. Usando padrao.";
+    }
+  } catch(e) {
+    sel.innerHTML = "Erro ao buscar taxa. Mantendo valor atual.";
+  }
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest("#cat-search") && !e.target.closest("#cat-results")) {
+    var r = document.getElementById("cat-results");
+    if (r) r.style.display = "none";
+  }
+});
+
+// ═══════════════════════════════════
 // INTEGRAÇÃO API MERCADO LIVRE
 // ═══════════════════════════════════
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyUBTwiKQptFE4BKvYs7RxuNXcZs3hM-ji4rLwsS-Av3nT812fXxQjok4Kc3cU35sVSw/exec';
-const ML_AUTH_URL = 'https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=4369092053425585&redirect_uri=https://betod50.github.io/Calculadora/';
+const ML_AUTH_URL = 'https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=4369092053425585&redirect_uri=https://script.google.com/macros/s/AKfycbzyUBTwiKQptFE4BKvYs7RxuNXcZs3hM-ji4rLwsS-Av3nT812fXxQjok4Kc3cU35sVSw/exec';
 let mlToken = null;
 
 async function initML() {
