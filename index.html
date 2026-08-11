@@ -6,233 +6,74 @@
 <title>Calculadora de Margem — ML · Shopee · TikTok Shop</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-font-family: 'Segoe UI', system-ui, sans-serif;
-background: #0b0e14;
-color: #e2e8f0;
-min-height: 100vh;
-padding: 20px 16px 40px;
-}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0b0e14; color: #e2e8f0; min-height: 100vh; padding: 20px 16px 40px; }
 .container { max-width: 960px; margin: 0 auto; }
-header {
-text-align: center;
-padding: 28px 0 24px;
-border-bottom: 1px solid #1a1f2e;
-margin-bottom: 24px;
-}
-header h1 {
-font-size: 22px;
-font-weight: 800;
-color: #fff;
-letter-spacing: -.02em;
-}
-.plat-badges {
-display: flex;
-justify-content: center;
-gap: 8px;
-margin-top: 10px;
-flex-wrap: wrap;
-}
-.badge {
-font-size: 11px;
-font-weight: 700;
-padding: 3px 10px;
-border-radius: 20px;
-letter-spacing: .04em;
-}
+header { text-align: center; padding: 28px 0 24px; border-bottom: 1px solid #1a1f2e; margin-bottom: 24px; }
+header h1 { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+.plat-badges { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .04em; }
 .badge-ml { background: #FFE600; color: #0b0e14; }
 .badge-sh { background: #EE4D2D; color: #fff; }
 .badge-tik { background: #010101; color: #fff; border: 1px solid #333; }
-.plat-tabs {
-display: flex;
-gap: 6px;
-margin-bottom: 20px;
-background: #141824;
-border: 1px solid #1a1f2e;
-border-radius: 12px;
-padding: 5px;
-}
-.plat-tab {
-flex: 1;
-padding: 10px;
-border: none;
-border-radius: 8px;
-cursor: pointer;
-font-size: 13px;
-font-weight: 700;
-transition: all .15s;
-background: transparent;
-color: #4b5563;
-letter-spacing: .02em;
-}
+.plat-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #141824; border: 1px solid #1a1f2e; border-radius: 12px; padding: 5px; }
+.plat-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all .15s; background: transparent; color: #4b5563; letter-spacing: .02em; }
 .plat-tab.ml.active { background: #FFE600; color: #0b0e14; }
 .plat-tab.sh.active { background: #EE4D2D; color: #fff; }
 .plat-tab.tik.active { background: #fff; color: #010101; }
 .plat-tab:hover:not(.active) { color: #9ca3af; }
-.card {
-background: #141824;
-border: 1px solid #1a1f2e;
-border-radius: 12px;
-padding: 20px;
-margin-bottom: 14px;
-}
-.card-title {
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: .08em;
-margin-bottom: 14px;
-}
+.card { background: #141824; border: 1px solid #1a1f2e; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+.card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
 .card-title.ml { color: #FFE600; }
 .card-title.sh { color: #EE4D2D; }
-.card-title.tik { color: #e2e8f0; }
 .card-title.neutro { color: #60a5fa; }
 label { display: block; font-size: 11px; color: #6b7280; margin-bottom: 4px; font-weight: 500; }
-input, select {
-width: 100%;
-background: #0b0e14;
-border: 1px solid #1e2533;
-border-radius: 7px;
-color: #e2e8f0;
-font-size: 14px;
-padding: 9px 11px;
-outline: none;
-transition: border-color .15s;
-font-family: inherit;
-}
+input, select { width: 100%; background: #0b0e14; border: 1px solid #1e2533; border-radius: 7px; color: #e2e8f0; font-size: 14px; padding: 9px 11px; outline: none; transition: border-color .15s; font-family: inherit; }
 input:focus, select:focus { border-color: var(--accent, #FFE600); }
-select option { background: #141824; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 11px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-@media(max-width:600px){ .grid-2,.grid-3,.grid-4{ grid-template-columns:1fr 1fr; } }
+@media(max-width:600px){ .grid-2,.grid-3{ grid-template-columns:1fr 1fr; } }
 .input-unit { position: relative; }
-.unit-label {
-position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-font-size: 11px; color: #374151; pointer-events: none;
-}
-.resultado-principal {
-background: linear-gradient(135deg, #0a1a0a 0%, #0b1220 100%);
-border: 1.5px solid #22c55e;
-border-radius: 12px;
-padding: 18px 20px;
-margin-bottom: 14px;
-display: none;
-}
+.unit-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #374151; pointer-events: none; }
+.resultado-principal { background: linear-gradient(135deg, #0a1a0a 0%, #0b1220 100%); border: 1.5px solid #22c55e; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; display: none; }
 .resultado-principal.visible { display: block; }
-.res-label {
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: .08em;
-color: #22c55e;
-margin-bottom: 6px;
-}
-.res-preco {
-font-size: 36px;
-font-weight: 900;
-color: #22c55e;
-line-height: 1;
-margin-bottom: 8px;
-}
-.res-detalhe {
-font-size: 12px;
-color: #6b7280;
-line-height: 1.7;
-}
+.res-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #22c55e; margin-bottom: 6px; }
+.res-preco { font-size: 36px; font-weight: 900; color: #22c55e; line-height: 1; margin-bottom: 8px; }
+.res-detalhe { font-size: 12px; color: #6b7280; line-height: 1.7; }
 .res-detalhe strong { color: #22c55e; }
-.metricas {
-display: grid;
-grid-template-columns: repeat(4,1fr);
-gap: 9px;
-margin-bottom: 14px;
-}
+.metricas { display: grid; grid-template-columns: repeat(4,1fr); gap: 9px; margin-bottom: 14px; }
 @media(max-width:600px){ .metricas{ grid-template-columns:1fr 1fr; } }
-.metrica {
-background: #0b0e14;
-border: 1px solid #1a1f2e;
-border-radius: 8px;
-padding: 12px;
-text-align: center;
-}
+.metrica { background: #0b0e14; border: 1px solid #1a1f2e; border-radius: 8px; padding: 12px; text-align: center; }
 .metrica-val { font-size: 18px; font-weight: 800; color: #fff; }
 .metrica-label { font-size: 10px; color: #4b5563; margin-top: 3px; }
 .metrica.ok .metrica-val { color: #22c55e; }
 .metrica.warn .metrica-val { color: #f59e0b; }
 .metrica.bad .metrica-val { color: #ef4444; }
-.cenarios {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 10px;
-}
+.cenarios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media(max-width:540px){ .cenarios{ grid-template-columns:1fr; } }
-.cenario {
-background: #0b0e14;
-border: 1px solid #1a1f2e;
-border-radius: 8px;
-padding: 13px;
-}
-.cenario-titulo {
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: .07em;
-margin-bottom: 8px;
-}
+.cenario { background: #0b0e14; border: 1px solid #1a1f2e; border-radius: 8px; padding: 13px; }
+.cenario-titulo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
 .cenario.verde .cenario-titulo { color: #22c55e; }
 .cenario.azul .cenario-titulo { color: #60a5fa; }
-.cenario-row {
-display: flex;
-justify-content: space-between;
-font-size: 12px;
-color: #6b7280;
-margin-bottom: 3px;
-}
+.cenario-row { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 3px; }
 .cenario-row span:last-child { color: #d1d5db; font-weight: 600; }
-.cenario-row.total {
-border-top: 1px solid #1a1f2e;
-padding-top: 6px;
-margin-top: 4px;
-}
+.cenario-row.total { border-top: 1px solid #1a1f2e; padding-top: 6px; margin-top: 4px; }
 .cenario-row.total span { color: #fff; font-size: 13px; }
 .cenario-row.total span:last-child { color: #FFE600; }
-.peso-badges {
-display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px;
-}
-.pbadge {
-background: #1a1f2e;
-border: 1px solid #1e2533;
-border-radius: 6px;
-padding: 4px 10px;
-font-size: 11px;
-color: #6b7280;
-}
+.peso-badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.pbadge { background: #1a1f2e; border: 1px solid #1e2533; border-radius: 6px; padding: 4px 10px; font-size: 11px; color: #6b7280; }
 .pbadge strong { color: #e2e8f0; }
 .pbadge.destaque { border-color: #FFE600; }
 .pbadge.destaque strong { color: #FFE600; }
-.frete-alerta {
-background: rgba(245,158,11,.08);
-border: 1px solid rgba(245,158,11,.25);
-border-radius: 6px;
-padding: 7px 10px;
-font-size: 11px;
-color: #f59e0b;
-margin-top: 8px;
-display: none;
-}
-.com-info {
-background: #0b0e14;
-border: 1px solid #1a1f2e;
-border-radius: 8px;
-padding: 10px 13px;
-font-size: 12px;
-color: #6b7280;
-margin-top: 10px;
-line-height: 1.6;
-}
+.frete-alerta { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); border-radius: 6px; padding: 7px 10px; font-size: 11px; color: #f59e0b; margin-top: 8px; display: none; }
+.com-info { background: #0b0e14; border: 1px solid #1a1f2e; border-radius: 8px; padding: 10px 13px; font-size: 12px; color: #6b7280; margin-top: 10px; line-height: 1.6; }
 .com-info strong { color: #e2e8f0; }
 .fonte-nota { font-size: 10px; color: #374151; margin-top: 8px; }
 .fonte-nota a { color: #4b5563; }
+.cat-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #1a1f2e; font-size: 13px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+.cat-item:hover { background: #1a1f2e; }
+.cat-item:last-child { border-bottom: none; }
+.cat-item .cat-arrow { color: #6b7280; font-size: 12px; }
+.cat-item.final { color: #22c55e; }
 </style>
 </head>
 <body>
@@ -255,64 +96,33 @@ line-height: 1.6;
 <div class="card">
 <div class="card-title neutro">💰 Produto e Custos</div>
 <div class="grid-3" style="margin-bottom:11px;">
-<div>
-<label>Custo do produto (R$)</label>
-<input type="number" id="custo" placeholder="0,00" step="0.01" min="0" oninput="calc()" />
-</div>
-<div>
-<label>Imposto (%)</label>
-<input type="number" id="imposto" value="8" step="0.5" min="0" max="50" oninput="calc()" />
-</div>
-<div>
-<label>Margem desejada (%)</label>
-<input type="number" id="margem" value="30" step="1" min="0" oninput="calc()" />
-</div>
+<div><label>Custo do produto (R$)</label><input type="number" id="custo" placeholder="0,00" step="0.01" min="0" oninput="calc()" /></div>
+<div><label>Imposto (%)</label><input type="number" id="imposto" value="8" step="0.5" min="0" max="50" oninput="calc()" /></div>
+<div><label>Margem desejada (%)</label><input type="number" id="margem" value="30" step="1" min="0" oninput="calc()" /></div>
 </div>
 <div class="grid-3" style="margin-bottom:11px;">
-<div>
-<label>Outros custos (R$) <span style="color:#374151">embalagem, op.</span></label>
-<input type="number" id="outros" value="0" step="0.01" min="0" oninput="calc()" />
-</div>
-<div>
-<label>Preço de venda (R$) <span style="color:#FFE600;font-size:10px;">ou deixe calcular</span></label>
-<input type="number" id="preco_venda" placeholder="deixe vazio para calcular" step="0.01" min="0" oninput="calc()" />
-</div>
-<div class="input-unit">
-<label>Peso do produto <span style="color:#374151">usado em todas as plataformas</span></label>
-<input type="number" id="peso_global" placeholder="0,0" step="0.01" min="0" oninput="sincronizarPeso()" />
-<span class="unit-label">kg</span>
-</div>
+<div><label>Outros custos (R$) <span style="color:#374151">embalagem, op.</span></label><input type="number" id="outros" value="0" step="0.01" min="0" oninput="calc()" /></div>
+<div><label>Preço de venda (R$) <span style="color:#FFE600;font-size:10px;">ou deixe calcular</span></label><input type="number" id="preco_venda" placeholder="deixe vazio para calcular" step="0.01" min="0" oninput="calc()" /></div>
+<div class="input-unit"><label>Peso do produto <span style="color:#374151">usado em todas as plataformas</span></label><input type="number" id="peso_global" placeholder="0,0" step="0.01" min="0" oninput="sincronizarPeso()" /><span class="unit-label">kg</span></div>
 </div>
 <div style="padding-top:11px;border-top:1px solid #1a1f2e;margin-bottom:11px;">
 <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📐 Dimensões da embalagem <span style="color:#374151;font-weight:400;text-transform:none;">(para cálculo do peso cubado ML)</span></div>
 <div class="grid-3">
-<div class="input-unit">
-<label>Comprimento</label>
-<input type="number" id="dim_c" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" />
-<span class="unit-label">cm</span>
-</div>
-<div class="input-unit">
-<label>Largura</label>
-<input type="number" id="dim_l" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" />
-<span class="unit-label">cm</span>
-</div>
-<div class="input-unit">
-<label>Altura</label>
-<input type="number" id="dim_a" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" />
-<span class="unit-label">cm</span>
-</div>
+<div class="input-unit"><label>Comprimento</label><input type="number" id="dim_c" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" /><span class="unit-label">cm</span></div>
+<div class="input-unit"><label>Largura</label><input type="number" id="dim_l" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" /><span class="unit-label">cm</span></div>
+<div class="input-unit"><label>Altura</label><input type="number" id="dim_a" placeholder="0" step="1" min="0" oninput="sincronizarPeso()" /><span class="unit-label">cm</span></div>
 </div>
 </div>
 <div style="padding-top:11px;border-top:1px solid #1a1f2e;">
 <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📊 Comissão da Plataforma</div>
 <div id="com-ml">
 <div style="margin-bottom:10px;">
-<label>🔍 Buscar categoria ML <span style="color:#374151">para comissão exata</span></label>
-<div style="position:relative;">
-<input type="text" id="cat-search" placeholder="Ex: ferramentas, parafuso, chave de fenda..." oninput="debunceBuscarCat()" autocomplete="off" style="width:100%;background:#0b0e14;border:1px solid #1e2533;border-radius:7px;color:#e2e8f0;font-size:14px;padding:9px 11px;outline:none;font-family:inherit;" />
-<div id="cat-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1f2e;border:1px solid #2a2f3e;border-radius:7px;z-index:100;max-height:220px;overflow-y:auto;margin-top:4px;"></div>
+<label>📂 Categoria ML <span style="color:#374151">navegue para comissão exata</span></label>
+<div id="cat-breadcrumb" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:16px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;"></div>
+<div id="cat-tree" style="background:#0b0e14;border:1px solid #1e2533;border-radius:7px;max-height:220px;overflow-y:auto;">
+<div style="padding:12px;color:#6b7280;font-size:12px;text-align:center;">⏳ Carregando categorias...</div>
 </div>
-<div id="cat-selecionada" style="display:none;font-size:11px;color:#22c55e;margin-top:5px;padding:5px 8px;background:rgba(34,197,94,.08);border-radius:5px;border:1px solid rgba(34,197,94,.2);"></div>
+<div id="cat-selecionada" style="display:none;font-size:11px;color:#22c55e;margin-top:5px;padding:6px 10px;background:rgba(34,197,94,.08);border-radius:5px;border:1px solid rgba(34,197,94,.2);"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
 <div>
@@ -322,25 +132,18 @@ line-height: 1.6;
 <button id="btn-premium" onclick="setTipoAnuncio('premium')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #2a2f3e;background:transparent;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;">Premium <span id="lbl-premium">17%</span></button>
 </div>
 </div>
-<div>
-<label>Comissão ML (%) <span style="color:#374151">editável</span></label>
-<input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" />
+<div><label>Comissão ML (%) <span style="color:#374151">editável</span></label><input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" /></div>
 </div>
+<div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% · Navegue pela árvore acima para ver a taxa exata da sua categoria.</div>
 </div>
-<div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% (ferramentas) · Busque a categoria acima para ver a taxa exata.</div>
-</div>
-<div id="com-sh" style="display:none;">
-<div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16 &nbsp;|&nbsp; <strong>R$100–R$199,99:</strong> 14% + R$20<br><strong>R$200–R$499,99:</strong> 14% + R$26 &nbsp;|&nbsp; <strong>Acima R$500:</strong> 14% + R$26</div>
-</div>
-<div id="com-tik" style="display:none;">
-<div class="com-info">Comissão TikTok Shop automática por faixa de preço:<br><strong>Até R$50:</strong> 10% + R$4 &nbsp;|&nbsp; <strong>Acima R$50:</strong> 6% + R$6<br>Taxa de Envio (frete): <strong>6% sobre o valor do pedido</strong></div>
-</div>
+<div id="com-sh" style="display:none;"><div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16 &nbsp;|&nbsp; <strong>R$100–R$199,99:</strong> 14% + R$20<br><strong>R$200–R$499,99:</strong> 14% + R$26 &nbsp;|&nbsp; <strong>Acima R$500:</strong> 14% + R$26</div></div>
+<div id="com-tik" style="display:none;"><div class="com-info">Comissão TikTok Shop automática por faixa de preço:<br><strong>Até R$50:</strong> 10% + R$4 &nbsp;|&nbsp; <strong>Acima R$50:</strong> 6% + R$6<br>Taxa de Envio (frete): <strong>6% sobre o valor do pedido</strong></div></div>
 </div>
 </div>
 
 <div class="card" id="card-frete-ml" style="display:none;">
 <div class="card-title ml">🚚 Frete ML — Resultado</div>
-<div class="peso-badges" id="peso-badges">
+<div class="peso-badges" id="peso-badges" style="display:none;">
 <span class="pbadge">Real: <strong id="b-real">—</strong></span>
 <span class="pbadge">Cubado: <strong id="b-cubado">—</strong></span>
 <span class="pbadge destaque">⚖️ Cobrado: <strong id="b-cobrado">—</strong></span>
@@ -406,17 +209,11 @@ line-height: 1.6;
 <div id="promo-resultado" style="display:none;">
 <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:12px;margin-bottom:10px;">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-<div>
-<div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Preço com desconto</div>
-<div style="font-size:24px;font-weight:900;color:#fff;" id="p-preco-desc">—</div>
-</div>
-<div style="text-align:right;">
-<div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Desconto total aplicado</div>
-<div style="font-size:16px;font-weight:700;color:#f87171;" id="p-desc-total">—</div>
+<div><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Preço com desconto</div><div style="font-size:24px;font-weight:900;color:#fff;" id="p-preco-desc">—</div></div>
+<div style="text-align:right;"><div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Desconto total aplicado</div><div style="font-size:16px;font-weight:700;color:#f87171;" id="p-desc-total">—</div></div>
 </div>
 </div>
-</div>
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;" id="promo-metricas">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
 <div class="metrica" id="pm-lucro"><div class="metrica-val" id="pv-lucro">—</div><div class="metrica-label">Lucro restante</div></div>
 <div class="metrica" id="pm-margem" style="border:1.5px solid #22c55e;"><div class="metrica-val" id="pv-margem">—</div><div class="metrica-label">📊 Margem sem ads</div></div>
 <div class="metrica" id="pm-afiliado"><div class="metrica-val" id="pv-afiliado">—</div><div class="metrica-label">Custo afiliado</div></div>
@@ -449,494 +246,431 @@ line-height: 1.6;
 </div>
 </div>
 </div>
-</div>
 
 <script>
-const ML_FRETE = [
-{ max:0.3, v:[5.65,6.55,7.75,12.35,14.35,16.45,18.45,20.95] },
-{ max:0.5, v:[5.95,6.65,7.85,13.25,15.45,17.65,19.85,22.55] },
-{ max:1, v:[6.05,6.75,7.95,13.85,16.15,18.45,20.75,23.65] },
-{ max:1.5, v:[6.15,6.85,8.05,14.15,16.45,18.85,21.15,24.65] },
-{ max:2, v:[6.25,6.95,8.15,14.45,16.85,19.25,21.65,24.65] },
-{ max:3, v:[6.35,7.95,8.55,15.75,18.35,21.05,23.65,26.25] },
-{ max:4, v:[6.45,8.15,8.95,17.05,19.85,22.65,25.55,28.35] },
-{ max:5, v:[6.55,8.35,9.75,18.45,21.55,24.65,27.75,30.75] },
-{ max:6, v:[6.65,8.55,9.95,25.45,28.55,32.65,35.75,39.75] },
-{ max:7, v:[6.75,8.75,10.15,27.05,31.05,36.05,40.05,44.05] },
-{ max:8, v:[6.85,8.95,10.35,28.85,33.65,38.45,43.25,48.05] },
-{ max:9, v:[6.95,9.15,10.55,29.65,34.55,39.55,44.45,49.35] },
-{ max:11, v:[7.05,9.55,10.95,41.25,48.05,54.95,61.75,68.65] },
-{ max:13, v:[7.15,9.95,11.35,42.15,49.25,56.25,63.25,70.25] },
-{ max:15, v:[7.25,10.15,11.55,45.05,52.45,59.95,67.45,74.95] },
-{ max:17, v:[7.35,10.35,11.75,48.55,56.05,63.55,70.75,78.65] },
-{ max:20, v:[7.45,10.55,11.95,54.75,63.85,72.95,82.05,91.15] },
-{ max:25, v:[7.65,10.95,12.15,64.05,75.05,84.75,95.35,105.95] },
-{ max:30, v:[7.75,11.15,12.35,65.95,75.45,85.55,96.25,106.95] },
-{ max:40, v:[7.85,11.35,12.55,67.75,78.95,88.95,99.15,107.05] },
-{ max:50, v:[7.95,11.55,12.75,70.25,81.05,92.05,102.55,110.75] },
-{ max:60, v:[8.05,11.75,12.95,74.95,86.45,98.15,109.35,118.15] },
-{ max:70, v:[8.15,11.95,13.15,80.25,92.95,105.05,117.15,126.55] },
-{ max:80, v:[8.25,12.15,13.35,83.95,97.05,109.85,122.45,132.25] },
-{ max:90, v:[8.35,12.35,13.55,93.25,107.45,122.05,136.05,146.95] },
-{ max:100, v:[8.45,12.55,13.75,106.55,123.95,139.55,155.55,167.95] },
-{ max:125, v:[8.55,12.75,13.95,119.25,138.05,156.05,173.95,187.95] },
-{ max:150, v:[8.65,12.75,14.15,126.55,146.15,165.65,184.65,199.45] },
-{ max:Infinity, v:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95] }
+const ML_FRETE=[
+{max:0.3,v:[5.65,6.55,7.75,12.35,14.35,16.45,18.45,20.95]},
+{max:0.5,v:[5.95,6.65,7.85,13.25,15.45,17.65,19.85,22.55]},
+{max:1,v:[6.05,6.75,7.95,13.85,16.15,18.45,20.75,23.65]},
+{max:1.5,v:[6.15,6.85,8.05,14.15,16.45,18.85,21.15,24.65]},
+{max:2,v:[6.25,6.95,8.15,14.45,16.85,19.25,21.65,24.65]},
+{max:3,v:[6.35,7.95,8.55,15.75,18.35,21.05,23.65,26.25]},
+{max:4,v:[6.45,8.15,8.95,17.05,19.85,22.65,25.55,28.35]},
+{max:5,v:[6.55,8.35,9.75,18.45,21.55,24.65,27.75,30.75]},
+{max:6,v:[6.65,8.55,9.95,25.45,28.55,32.65,35.75,39.75]},
+{max:7,v:[6.75,8.75,10.15,27.05,31.05,36.05,40.05,44.05]},
+{max:8,v:[6.85,8.95,10.35,28.85,33.65,38.45,43.25,48.05]},
+{max:9,v:[6.95,9.15,10.55,29.65,34.55,39.55,44.45,49.35]},
+{max:11,v:[7.05,9.55,10.95,41.25,48.05,54.95,61.75,68.65]},
+{max:13,v:[7.15,9.95,11.35,42.15,49.25,56.25,63.25,70.25]},
+{max:15,v:[7.25,10.15,11.55,45.05,52.45,59.95,67.45,74.95]},
+{max:17,v:[7.35,10.35,11.75,48.55,56.05,63.55,70.75,78.65]},
+{max:20,v:[7.45,10.55,11.95,54.75,63.85,72.95,82.05,91.15]},
+{max:25,v:[7.65,10.95,12.15,64.05,75.05,84.75,95.35,105.95]},
+{max:30,v:[7.75,11.15,12.35,65.95,75.45,85.55,96.25,106.95]},
+{max:40,v:[7.85,11.35,12.55,67.75,78.95,88.95,99.15,107.05]},
+{max:50,v:[7.95,11.55,12.75,70.25,81.05,92.05,102.55,110.75]},
+{max:60,v:[8.05,11.75,12.95,74.95,86.45,98.15,109.35,118.15]},
+{max:70,v:[8.15,11.95,13.15,80.25,92.95,105.05,117.15,126.55]},
+{max:80,v:[8.25,12.15,13.35,83.95,97.05,109.85,122.45,132.25]},
+{max:90,v:[8.35,12.35,13.55,93.25,107.45,122.05,136.05,146.95]},
+{max:100,v:[8.45,12.55,13.75,106.55,123.95,139.55,155.55,167.95]},
+{max:125,v:[8.55,12.75,13.95,119.25,138.05,156.05,173.95,187.95]},
+{max:150,v:[8.65,12.75,14.15,126.55,146.15,165.65,184.65,199.45]},
+{max:Infinity,v:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95]}
 ];
-const ML_FAIXAS = [18.99,48.99,78.99,99.99,119.99,149.99,199.99,Infinity];
-const SH_COM = [
-{ max:79.99, pct:0.20, fixo:4 },
-{ max:99.99, pct:0.14, fixo:16 },
-{ max:199.99, pct:0.14, fixo:20 },
-{ max:499.99, pct:0.14, fixo:26 },
-{ max:Infinity,pct:0.14,fixo:26 }
-];
-const SH_FRETE = [
-{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},
-{max:3,c:35},{max:5,c:45},{max:7,c:55},{max:10,c:65},
-{max:15,c:80},{max:20,c:95},{max:30,c:115},{max:Infinity,c:140}
-];
-const TIK_COM = [
-{ max:50, pct:0.10, fixo:4 },
-{ max:Infinity, pct:0.06, fixo:6 }
-];
-let plat = 'ml';
-function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.',','); }
-function pct(v) { return (v||0).toFixed(1) + '%'; }
-function sincronizarPeso() {
-  const peso = document.getElementById('peso_global').value;
-  const cardFrete = document.getElementById('card-frete-ml');
-  if (cardFrete) {
-    cardFrete.style.display = (plat === 'ml' && parseFloat(peso) > 0) ? 'block' : 'none';
-  }
+const ML_FAIXAS=[18.99,48.99,78.99,99.99,119.99,149.99,199.99,Infinity];
+const SH_COM=[{max:79.99,pct:0.20,fixo:4},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:499.99,pct:0.14,fixo:26},{max:Infinity,pct:0.14,fixo:26}];
+const SH_FRETE=[{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},{max:3,c:35},{max:5,c:45},{max:7,c:55},{max:10,c:65},{max:15,c:80},{max:20,c:95},{max:30,c:115},{max:Infinity,c:140}];
+const TIK_COM=[{max:50,pct:0.10,fixo:4},{max:Infinity,pct:0.06,fixo:6}];
+let plat='ml';
+let classicoBase=12, premiumBase=17;
+
+function fmt(v){return 'R$ '+(v||0).toFixed(2).replace('.',',');}
+function pct(v){return (v||0).toFixed(1)+'%';}
+
+function sincronizarPeso(){
+  const peso=parseFloat(document.getElementById('peso_global').value)||0;
+  const cardFrete=document.getElementById('card-frete-ml');
+  if(cardFrete) cardFrete.style.display=(plat==='ml'&&peso>0)?'block':'none';
   calcFrete();
   calc();
 }
-function setTipoAnuncio(tipo) {
-  const btnC = document.getElementById('btn-classico');
-  const btnP = document.getElementById('btn-premium');
-  const campo = document.getElementById('ml-com-pct');
-  if (tipo === 'classico') {
-    campo.value = '12';
-    btnC.style.borderColor = '#FFE600'; btnC.style.color = '#FFE600'; btnC.style.background = 'rgba(255,230,0,.08)';
-    btnP.style.borderColor = '#2a2f3e'; btnP.style.color = '#6b7280'; btnP.style.background = 'transparent';
+
+function setTipoAnuncio(tipo){
+  const btnC=document.getElementById('btn-classico');
+  const btnP=document.getElementById('btn-premium');
+  const campo=document.getElementById('ml-com-pct');
+  if(tipo==='classico'){
+    campo.value=classicoBase;
+    btnC.style.borderColor='#FFE600';btnC.style.color='#FFE600';btnC.style.background='rgba(255,230,0,.08)';
+    btnP.style.borderColor='#2a2f3e';btnP.style.color='#6b7280';btnP.style.background='transparent';
   } else {
-    campo.value = '17';
-    btnP.style.borderColor = '#FFE600'; btnP.style.color = '#FFE600'; btnP.style.background = 'rgba(255,230,0,.08)';
-    btnC.style.borderColor = '#2a2f3e'; btnC.style.color = '#6b7280'; btnC.style.background = 'transparent';
+    campo.value=premiumBase;
+    btnP.style.borderColor='#FFE600';btnP.style.color='#FFE600';btnP.style.background='rgba(255,230,0,.08)';
+    btnC.style.borderColor='#2a2f3e';btnC.style.color='#6b7280';btnC.style.background='transparent';
   }
   calc();
 }
-function calcAcos() {
-  const gasto = parseFloat(document.getElementById('ads_gasto').value) || 0;
-  const receitaAds = parseFloat(document.getElementById('ads_receita_ads').value) || 0;
-  const receitaTotal = parseFloat(document.getElementById('ads_receita_total').value) || 0;
-  if (gasto <= 0) { document.getElementById('acos-resultado').style.display = 'none'; return; }
-  document.getElementById('acos-resultado').style.display = 'block';
-  const acos = receitaAds > 0 ? (gasto / receitaAds) * 100 : 0;
-  const tacos = receitaTotal > 0 ? (gasto / receitaTotal) * 100 : 0;
-  const roas = gasto > 0 ? receitaAds / gasto : 0;
-  document.getElementById('val-acos').textContent = receitaAds > 0 ? acos.toFixed(1) + '%' : '—';
-  document.getElementById('val-tacos').textContent = receitaTotal > 0 ? tacos.toFixed(1) + '%' : '—';
-  document.getElementById('val-roas').textContent = receitaAds > 0 ? roas.toFixed(2) + 'x' : '—';
-  const corAcos = acos <= 15 ? '#22c55e' : acos <= 30 ? '#f59e0b' : '#ef4444';
-  document.getElementById('val-acos').style.color = receitaAds > 0 ? corAcos : '#fff';
-  const corTacos = tacos <= 10 ? '#22c55e' : tacos <= 20 ? '#f59e0b' : '#ef4444';
-  document.getElementById('val-tacos').style.color = receitaTotal > 0 ? corTacos : '#fff';
-  let obs = '';
-  if (receitaAds > 0) {
-    obs += acos <= 15 ? `✅ ACOS de ${acos.toFixed(1)}% — excelente. ` : acos <= 30 ? `⚠️ ACOS de ${acos.toFixed(1)}% — aceitável. ` : `⛔ ACOS de ${acos.toFixed(1)}% — alto. `;
-  }
-  if (receitaTotal > 0) {
-    obs += tacos <= 10 ? `✅ TACOS de ${tacos.toFixed(1)}% — saudável. ` : tacos <= 20 ? `⚠️ TACOS de ${tacos.toFixed(1)}% — atenção. ` : `⛔ TACOS de ${tacos.toFixed(1)}% — crítico. `;
-  }
-  if (receitaAds > 0) { obs += `ROAS ${roas.toFixed(2)}x.`; }
-  document.getElementById('acos-obs').innerHTML = obs;
+
+function calcAcos(){
+  const gasto=parseFloat(document.getElementById('ads_gasto').value)||0;
+  const receitaAds=parseFloat(document.getElementById('ads_receita_ads').value)||0;
+  const receitaTotal=parseFloat(document.getElementById('ads_receita_total').value)||0;
+  if(gasto<=0){document.getElementById('acos-resultado').style.display='none';return;}
+  document.getElementById('acos-resultado').style.display='block';
+  const acos=receitaAds>0?(gasto/receitaAds)*100:0;
+  const tacos=receitaTotal>0?(gasto/receitaTotal)*100:0;
+  const roas=gasto>0?receitaAds/gasto:0;
+  document.getElementById('val-acos').textContent=receitaAds>0?acos.toFixed(1)+'%':'—';
+  document.getElementById('val-tacos').textContent=receitaTotal>0?tacos.toFixed(1)+'%':'—';
+  document.getElementById('val-roas').textContent=receitaAds>0?roas.toFixed(2)+'x':'—';
+  const corAcos=acos<=15?'#22c55e':acos<=30?'#f59e0b':'#ef4444';
+  document.getElementById('val-acos').style.color=receitaAds>0?corAcos:'#fff';
+  const corTacos=tacos<=10?'#22c55e':tacos<=20?'#f59e0b':'#ef4444';
+  document.getElementById('val-tacos').style.color=receitaTotal>0?corTacos:'#fff';
+  let obs='';
+  if(receitaAds>0) obs+=acos<=15?'✅ ACOS de '+acos.toFixed(1)+'% — excelente. ':acos<=30?'⚠️ ACOS de '+acos.toFixed(1)+'% — aceitável. ':'⛔ ACOS de '+acos.toFixed(1)+'% — alto. ';
+  if(receitaTotal>0) obs+=tacos<=10?'✅ TACOS de '+tacos.toFixed(1)+'% — saudável. ':tacos<=20?'⚠️ TACOS de '+tacos.toFixed(1)+'% — atenção. ':'⛔ TACOS de '+tacos.toFixed(1)+'% — crítico. ';
+  if(receitaAds>0) obs+='ROAS '+roas.toFixed(2)+'x.';
+  document.getElementById('acos-obs').innerHTML=obs;
 }
-function calcPromo() {
-  const precoEl = document.getElementById('res-preco');
-  if (!precoEl) return;
-  const precoBase = parseFloat(precoEl.textContent.replace('R$ ','').replace(',','.')) || 0;
-  if (precoBase <= 0) return;
-  const promoPct = parseFloat(document.getElementById('promo_pct').value) || 0;
-  const cupomPct = parseFloat(document.getElementById('cupom_pct').value) || 0;
-  const afiliadoPct = parseFloat(document.getElementById('afiliado_pct').value) || 0;
-  const descTotal = precoBase * (promoPct / 100) + precoBase * (cupomPct / 100);
-  const precoDesc = precoBase - descTotal;
-  const lucroBaseEl = document.getElementById('v-lucro');
-  const lucroBase = lucroBaseEl ? (parseFloat(lucroBaseEl.textContent.replace('R$ ','').replace(',','.')) || 0) : 0;
-  const custoAfiliado = precoDesc * (afiliadoPct / 100);
-  const lucroRestante = lucroBase - descTotal - custoAfiliado;
-  const margemRestante = precoDesc > 0 ? (lucroRestante / precoDesc) * 100 : 0;
-  const adsMaxR = Math.max(0, lucroRestante);
-  const adsMaxPct = precoDesc > 0 ? (adsMaxR / precoDesc) * 100 : 0;
-  const margemMinima = 10;
-  const adsSaudavelR = Math.max(0, lucroRestante - precoDesc * (margemMinima / 100));
-  const adsSaudavelPct = precoDesc > 0 ? (adsSaudavelR / precoDesc) * 100 : 0;
-  document.getElementById('p-preco-desc').textContent = fmt(precoDesc);
-  document.getElementById('p-desc-total').textContent = '-' + fmt(descTotal) + ' (' + (promoPct + cupomPct).toFixed(1) + '%)';
-  document.getElementById('pv-lucro').textContent = fmt(lucroRestante);
-  document.getElementById('pv-margem').textContent = margemRestante.toFixed(1) + '%';
-  document.getElementById('pv-afiliado').textContent = fmt(custoAfiliado);
-  document.getElementById('pv-sobra').textContent = fmt(adsMaxR);
-  const corLucro = lucroRestante >= 0 ? (margemRestante >= 15 ? 'ok' : 'warn') : 'bad';
-  document.getElementById('pm-lucro').className = 'metrica ' + corLucro;
-  document.getElementById('pm-margem').className = 'metrica ' + corLucro;
-  document.getElementById('pm-sobra').className = 'metrica ' + (adsMaxR > 0 ? 'ok' : 'bad');
-  document.getElementById('ads-max-r').textContent = fmt(adsMaxR);
-  document.getElementById('ads-max-pct').textContent = adsMaxPct.toFixed(1) + '%';
-  document.getElementById('ads-saudavel-pct').textContent = adsSaudavelPct.toFixed(1) + '%';
-  let obs = '';
-  if (lucroRestante < 0) {
-    obs = '⛔ Com essa combinação você está perdendo dinheiro. Reduza promoção, cupom ou afiliado.';
-  } else if (margemRestante < 10) {
-    obs = '⚠️ Margem muito apertada. Qualquer custo de ads vai gerar prejuízo.';
-  } else {
-    obs = `✅ Pode gastar até <strong>${fmt(adsMaxR)}</strong> em ads por unidade sem prejuízo. TACOS máximo recomendado: <strong>${adsSaudavelPct.toFixed(1)}%</strong>.`;
-  }
-  document.getElementById('ads-obs').innerHTML = obs;
-  document.getElementById('promo-resultado').style.display = 'block';
+
+function calcPromo(){
+  const precoEl=document.getElementById('res-preco');
+  if(!precoEl) return;
+  const precoBase=parseFloat(precoEl.textContent.replace('R$ ','').replace(',','.'))||0;
+  if(precoBase<=0) return;
+  const promoPct=parseFloat(document.getElementById('promo_pct').value)||0;
+  const cupomPct=parseFloat(document.getElementById('cupom_pct').value)||0;
+  const afiliadoPct=parseFloat(document.getElementById('afiliado_pct').value)||0;
+  const descTotal=precoBase*(promoPct/100)+precoBase*(cupomPct/100);
+  const precoDesc=precoBase-descTotal;
+  const lucroBaseEl=document.getElementById('v-lucro');
+  const lucroBase=lucroBaseEl?(parseFloat(lucroBaseEl.textContent.replace('R$ ','').replace(',','.'))||0):0;
+  const custoAfiliado=precoDesc*(afiliadoPct/100);
+  const lucroRestante=lucroBase-descTotal-custoAfiliado;
+  const margemRestante=precoDesc>0?(lucroRestante/precoDesc)*100:0;
+  const adsMaxR=Math.max(0,lucroRestante);
+  const adsMaxPct=precoDesc>0?(adsMaxR/precoDesc)*100:0;
+  const margemMinima=10;
+  const adsSaudavelR=Math.max(0,lucroRestante-precoDesc*(margemMinima/100));
+  const adsSaudavelPct=precoDesc>0?(adsSaudavelR/precoDesc)*100:0;
+  document.getElementById('p-preco-desc').textContent=fmt(precoDesc);
+  document.getElementById('p-desc-total').textContent='-'+fmt(descTotal)+' ('+(promoPct+cupomPct).toFixed(1)+'%)';
+  document.getElementById('pv-lucro').textContent=fmt(lucroRestante);
+  document.getElementById('pv-margem').textContent=margemRestante.toFixed(1)+'%';
+  document.getElementById('pv-afiliado').textContent=fmt(custoAfiliado);
+  document.getElementById('pv-sobra').textContent=fmt(adsMaxR);
+  const corLucro=lucroRestante>=0?(margemRestante>=15?'ok':'warn'):'bad';
+  document.getElementById('pm-lucro').className='metrica '+corLucro;
+  document.getElementById('pm-margem').className='metrica '+corLucro;
+  document.getElementById('pm-sobra').className='metrica '+(adsMaxR>0?'ok':'bad');
+  document.getElementById('ads-max-r').textContent=fmt(adsMaxR);
+  document.getElementById('ads-max-pct').textContent=adsMaxPct.toFixed(1)+'%';
+  document.getElementById('ads-saudavel-pct').textContent=adsSaudavelPct.toFixed(1)+'%';
+  let obs='';
+  if(lucroRestante<0) obs='⛔ Com essa combinação você está perdendo dinheiro. Reduza promoção, cupom ou afiliado.';
+  else if(margemRestante<10) obs='⚠️ Margem muito apertada. Qualquer custo de ads vai gerar prejuízo.';
+  else obs='✅ Pode gastar até <strong>'+fmt(adsMaxR)+'</strong> em ads por unidade sem prejuízo. TACOS máximo recomendado: <strong>'+adsSaudavelPct.toFixed(1)+'%</strong>.';
+  document.getElementById('ads-obs').innerHTML=obs;
+  document.getElementById('promo-resultado').style.display='block';
 }
-function setPlat(p) {
-  plat = p;
-  document.querySelectorAll('.plat-tab').forEach(b => b.classList.remove('active'));
+
+function setPlat(p){
+  plat=p;
+  document.querySelectorAll('.plat-tab').forEach(b=>b.classList.remove('active'));
   document.querySelector('.plat-tab.'+p).classList.add('active');
-  const peso = parseFloat(document.getElementById('peso_global').value)||0;
-  document.getElementById('card-frete-ml').style.display = (p==='ml' && peso>0) ? 'block' : 'none';
-  document.getElementById('card-frete-sh').style.display = p==='sh' ? 'block' : 'none';
-  document.getElementById('com-ml').style.display = p==='ml' ? 'block' : 'none';
-  document.getElementById('com-sh').style.display = p==='sh' ? 'block' : 'none';
-  document.getElementById('com-tik').style.display = p==='tik' ? 'block' : 'none';
-  document.documentElement.style.setProperty('--accent', p==='ml'?'#FFE600':p==='sh'?'#EE4D2D':'#fff');
+  const peso=parseFloat(document.getElementById('peso_global').value)||0;
+  document.getElementById('card-frete-ml').style.display=(p==='ml'&&peso>0)?'block':'none';
+  document.getElementById('card-frete-sh').style.display=p==='sh'?'block':'none';
+  document.getElementById('com-ml').style.display=p==='ml'?'block':'none';
+  document.getElementById('com-sh').style.display=p==='sh'?'block':'none';
+  document.getElementById('com-tik').style.display=p==='tik'?'block':'none';
+  document.documentElement.style.setProperty('--accent',p==='ml'?'#FFE600':p==='sh'?'#EE4D2D':'#fff');
   calc();
 }
-function colPreco(preco) {
-  for(let i=0;i<ML_FAIXAS.length;i++) if(preco<=ML_FAIXAS[i]) return i;
-  return ML_FAIXAS.length-1;
-}
-function mlFrete(kg, col) {
-  for(const f of ML_FRETE) if(kg<=f.max) return f.v[col];
-  return ML_FRETE[ML_FRETE.length-1].v[col];
-}
-function cubado(c,l,a){ return (c*l*a)/6000; }
-function calcFrete() {
-  const pr = parseFloat(document.getElementById('peso_global').value)||0;
-  const c = parseFloat(document.getElementById('dim_c').value)||0;
-  const l = parseFloat(document.getElementById('dim_l').value)||0;
-  const a = parseFloat(document.getElementById('dim_a').value)||0;
-  const pc = (c>0&&l>0&&a>0)?cubado(c,l,a):0;
-  const cobrado = Math.max(pr,pc,0.001);
+
+function colPreco(preco){for(let i=0;i<ML_FAIXAS.length;i++)if(preco<=ML_FAIXAS[i])return i;return ML_FAIXAS.length-1;}
+function mlFrete(kg,col){for(const f of ML_FRETE)if(kg<=f.max)return f.v[col];return ML_FRETE[ML_FRETE.length-1].v[col];}
+function cubado(c,l,a){return(c*l*a)/6000;}
+
+function calcFrete(){
+  const pr=parseFloat(document.getElementById('peso_global').value)||0;
+  const c=parseFloat(document.getElementById('dim_c').value)||0;
+  const l=parseFloat(document.getElementById('dim_l').value)||0;
+  const a=parseFloat(document.getElementById('dim_a').value)||0;
+  const pc=(c>0&&l>0&&a>0)?cubado(c,l,a):0;
+  const cobrado=Math.max(pr,pc,0.001);
   if(pr>0||pc>0){
-    document.getElementById('b-real').textContent = pr.toFixed(3)+' kg';
-    document.getElementById('b-cubado').textContent = pc>0?pc.toFixed(3)+' kg':'—';
-    document.getElementById('b-cobrado').textContent = cobrado.toFixed(3)+' kg';
+    document.getElementById('b-real').textContent=pr.toFixed(3)+' kg';
+    document.getElementById('b-cubado').textContent=pc>0?pc.toFixed(3)+' kg':'—';
+    document.getElementById('b-cobrado').textContent=cobrado.toFixed(3)+' kg';
     document.getElementById('peso-badges').style.display='flex';
-    const al = document.getElementById('frete-alerta');
-    if(pc>pr&&pc>0){
-      al.textContent='⚠️ Peso cubado ('+pc.toFixed(2)+' kg) maior que o real. O ML cobra pelo cubado.';
-      al.style.display='block';
-    } else { al.style.display='none'; }
+    const al=document.getElementById('frete-alerta');
+    if(pc>pr&&pc>0){al.textContent='⚠️ Peso cubado ('+pc.toFixed(2)+' kg) maior que o real. O ML cobra pelo cubado.';al.style.display='block';}
+    else{al.style.display='none';}
   } else {
     document.getElementById('peso-badges').style.display='none';
     document.getElementById('frete-alerta').style.display='none';
   }
 }
-function getComissao(preco) {
-  if(plat==='ml') {
-    const pctVal = (parseFloat(document.getElementById('ml-com-pct').value)||12)/100;
-    return { val: preco*pctVal, label: (pctVal*100).toFixed(1)+'%' };
-  }
-  if(plat==='sh') {
-    for(const f of SH_COM) { if(preco<=f.max) return { val: preco*f.pct+f.fixo, label: (f.pct*100).toFixed(0)+'% + R$'+f.fixo }; }
-  }
-  if(plat==='tik') {
-    for(const f of TIK_COM) { if(preco<=f.max) return { val: preco*f.pct+f.fixo, label: (f.pct*100).toFixed(0)+'% + R$'+f.fixo }; }
-  }
-  return { val:0, label:'—' };
+
+function getComissao(preco){
+  if(plat==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
+  if(plat==='sh'){for(const f of SH_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
+  if(plat==='tik'){for(const f of TIK_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
+  return{val:0,label:'—'};
 }
-function getFrete(preco) {
+
+function getFrete(preco){
   if(plat==='ml'){
-    const pr = parseFloat(document.getElementById('peso_global').value)||0;
-    const c = parseFloat(document.getElementById('dim_c').value)||0;
-    const l = parseFloat(document.getElementById('dim_l').value)||0;
-    const a = parseFloat(document.getElementById('dim_a').value)||0;
-    const pc = (c>0&&l>0&&a>0)?cubado(c,l,a):0;
-    const cobrado = Math.max(pr,pc,0.001);
-    const col = colPreco(preco);
-    const colPago = Math.min(col,2);
-    return { f1: mlFrete(cobrado,col), f2: mlFrete(cobrado,colPago) };
+    const pr=parseFloat(document.getElementById('peso_global').value)||0;
+    const c=parseFloat(document.getElementById('dim_c').value)||0;
+    const l=parseFloat(document.getElementById('dim_l').value)||0;
+    const a=parseFloat(document.getElementById('dim_a').value)||0;
+    const pc=(c>0&&l>0&&a>0)?cubado(c,l,a):0;
+    const cobrado=Math.max(pr,pc,0.001);
+    const col=colPreco(preco);
+    const colPago=Math.min(col,2);
+    return{f1:mlFrete(cobrado,col),f2:mlFrete(cobrado,colPago)};
   }
   if(plat==='sh'){
-    const p = parseFloat(document.getElementById('peso_global').value)||0;
-    if(p<=0) return {f1:0,f2:0};
+    const p=parseFloat(document.getElementById('peso_global').value)||0;
+    if(p<=0) return{f1:0,f2:0};
     let base=140;
-    for(const f of SH_FRETE) if(p<=f.max){base=f.c;break;}
-    const subsidio = preco>=200?40:preco>=80?30:20;
-    const seucusto = Math.max(0,base-subsidio);
-    const info = document.getElementById('sh-frete-info');
-    if(info) info.innerHTML = `Frete real estimado: <strong>${fmt(base)}</strong> &nbsp;|&nbsp; Shopee cobre: <strong>${fmt(subsidio)}</strong> &nbsp;|&nbsp; <strong style="color:${seucusto===0?'#22c55e':'#f59e0b'}">Você paga: ${fmt(seucusto)}${seucusto===0?' ✅ coberto':''}</strong>`;
-    return { f1: seucusto, f2: 0 };
+    for(const f of SH_FRETE)if(p<=f.max){base=f.c;break;}
+    const subsidio=preco>=200?40:preco>=80?30:20;
+    const seucusto=Math.max(0,base-subsidio);
+    const info=document.getElementById('sh-frete-info');
+    if(info) info.innerHTML='Frete real estimado: <strong>'+fmt(base)+'</strong> &nbsp;|&nbsp; Shopee cobre: <strong>'+fmt(subsidio)+'</strong> &nbsp;|&nbsp; <strong style="color:'+(seucusto===0?'#22c55e':'#f59e0b')+'">Você paga: '+fmt(seucusto)+(seucusto===0?' ✅ coberto':'')+'</strong>';
+    return{f1:seucusto,f2:0};
   }
-  if(plat==='tik'){ return { f1: preco*0.06, f2: 0 }; }
-  return {f1:0,f2:0};
+  if(plat==='tik'){return{f1:preco*0.06,f2:0};}
+  return{f1:0,f2:0};
 }
-function calc() {
-  const custo = parseFloat(document.getElementById('custo').value)||0;
-  const impPct = parseFloat(document.getElementById('imposto').value)||0;
-  const margDes = parseFloat(document.getElementById('margem').value)||0;
-  const outros = parseFloat(document.getElementById('outros').value)||0;
-  const precoM = parseFloat(document.getElementById('preco_venda').value)||0;
-  const rp = document.getElementById('resultado-principal');
-  const met = document.getElementById('metricas');
-  const cen = document.getElementById('cenarios');
-  const ci = document.getElementById('card-com-info');
-  if(custo<=0){
-    rp.classList.remove('visible');
-    met.style.display='none';
-    cen.style.display='none';
-    ci.style.display='none';
-    return;
-  }
-  function calcPrecoSug(custoBase) {
-    let p = custoBase / Math.max(0.01, 1 - impPct/100 - margDes/100);
-    for(let i=0;i<15;i++){
-      const com = getComissao(p);
-      const frete = getFrete(p);
-      const pNovo = custoBase + com.val + p*(impPct/100) + frete.f1 + p*(margDes/100);
-      if(Math.abs(pNovo-p)<0.01) break;
-      p = pNovo;
-    }
+
+function calc(){
+  const custo=parseFloat(document.getElementById('custo').value)||0;
+  const impPct=parseFloat(document.getElementById('imposto').value)||0;
+  const margDes=parseFloat(document.getElementById('margem').value)||0;
+  const outros=parseFloat(document.getElementById('outros').value)||0;
+  const precoM=parseFloat(document.getElementById('preco_venda').value)||0;
+  const rp=document.getElementById('resultado-principal');
+  const met=document.getElementById('metricas');
+  const cen=document.getElementById('cenarios');
+  const ci=document.getElementById('card-com-info');
+  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';return;}
+  function calcPrecoSug(custoBase){
+    let p=custoBase/Math.max(0.01,1-impPct/100-margDes/100);
+    for(let i=0;i<15;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(margDes/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
     return p;
   }
-  const custoBase = custo + outros;
-  const precoSug = calcPrecoSug(custoBase);
-  const preco = precoM>0 ? precoM : precoSug;
-  const frete = getFrete(preco);
-  const com = getComissao(preco);
-  const imp = preco*(impPct/100);
+  const custoBase=custo+outros;
+  const precoSug=calcPrecoSug(custoBase);
+  const preco=precoM>0?precoM:precoSug;
+  const frete=getFrete(preco);
+  const com=getComissao(preco);
+  const imp=preco*(impPct/100);
   rp.classList.add('visible');
-  document.getElementById('card-promo').style.display = 'block';
+  document.getElementById('card-promo').style.display='block';
   calcPromo();
-  document.getElementById('res-label').textContent = `💡 Preço sugerido — margem de ${margDes}% (${plat==='ml'?'ML':plat==='sh'?'Shopee':'TikTok Shop'})`;
-  document.getElementById('res-preco').textContent = fmt(precoSug);
-  document.getElementById('res-detalhe').innerHTML = `Custo: ${fmt(custo)}${outros>0?' | Outros: '+fmt(outros):''} | Frete: ${fmt(frete.f1)} | Imposto ${impPct}%: ${fmt(imp)} | Comissão: ${fmt(com.val)} | Lucro: <strong>${fmt(preco-custoBase-frete.f1-imp-com.val)}</strong>`;
+  document.getElementById('res-label').textContent='💡 Preço sugerido — margem de '+margDes+'% ('+(plat==='ml'?'ML':plat==='sh'?'Shopee':'TikTok Shop')+')';
+  document.getElementById('res-preco').textContent=fmt(precoSug);
+  document.getElementById('res-detalhe').innerHTML='Custo: '+fmt(custo)+(outros>0?' | Outros: '+fmt(outros):'')+' | Frete: '+fmt(frete.f1)+' | Imposto '+impPct+'%: '+fmt(imp)+' | Comissão: '+fmt(com.val)+' | Lucro: <strong>'+fmt(preco-custoBase-frete.f1-imp-com.val)+'</strong>';
   met.style.display='grid';
-  const lucro = preco - custoBase - frete.f1 - imp - com.val;
-  const margR = (lucro/preco)*100;
-  const roi = (lucro/custoBase)*100;
-  set('v-lucro', fmt(lucro), 'm-lucro', margR>=20?'ok':margR>=10?'warn':'bad');
-  set('v-margem', pct(margR), 'm-margem', margR>=25?'ok':margR>=12?'warn':'bad');
-  set('v-roi', pct(roi), 'm-roi', roi>=40?'ok':roi>=20?'warn':'bad');
-  document.getElementById('v-break').textContent = fmt(precoSug);
-  document.getElementById('m-break').className = 'metrica';
+  const lucro=preco-custoBase-frete.f1-imp-com.val;
+  const margR=(lucro/preco)*100;
+  const roi=(lucro/custoBase)*100;
+  set('v-lucro',fmt(lucro),'m-lucro',margR>=20?'ok':margR>=10?'warn':'bad');
+  set('v-margem',pct(margR),'m-margem',margR>=25?'ok':margR>=12?'warn':'bad');
+  set('v-roi',pct(roi),'m-roi',roi>=40?'ok':roi>=20?'warn':'bad');
+  document.getElementById('v-break').textContent=fmt(precoSug);
+  document.getElementById('m-break').className='metrica';
   cen.style.display='grid';
-  const comLabel = plat==='ml'?'Comissão ML':plat==='sh'?'Comissão Shopee':'Comissão TikTok';
-  document.getElementById('c1-com-label').textContent = comLabel;
-  document.getElementById('c2-com-label').textContent = comLabel;
+  const comLabel=plat==='ml'?'Comissão ML':plat==='sh'?'Comissão Shopee':'Comissão TikTok';
+  document.getElementById('c1-com-label').textContent=comLabel;
+  document.getElementById('c2-com-label').textContent=comLabel;
   if(plat==='ml'){
-    document.getElementById('c1-titulo').textContent = '🟢 Frete Grátis (você absorve)';
-    document.getElementById('c2-titulo').textContent = '🔵 Comprador Paga Frete';
-    fillCenario('c1', preco, custo, outros, imp, frete.f1, com.val);
-    fillCenario('c2', preco, custo, outros, imp, frete.f2, com.val);
+    document.getElementById('c1-titulo').textContent='🟢 Frete Grátis (você absorve)';
+    document.getElementById('c2-titulo').textContent='🔵 Comprador Paga Frete';
+    fillCenario('c1',preco,custo,outros,imp,frete.f1,com.val);
+    fillCenario('c2',preco,custo,outros,imp,frete.f2,com.val);
   } else if(plat==='sh'){
-    document.getElementById('c1-titulo').textContent = '🟢 Custo real (subsídio Shopee)';
-    document.getElementById('c2-titulo').textContent = '🔵 Se subsídio cobrir 100%';
-    fillCenario('c1', preco, custo, outros, imp, frete.f1, com.val);
-    fillCenario('c2', preco, custo, outros, imp, 0, com.val);
+    document.getElementById('c1-titulo').textContent='🟢 Custo real (subsídio Shopee)';
+    document.getElementById('c2-titulo').textContent='🔵 Se subsídio cobrir 100%';
+    fillCenario('c1',preco,custo,outros,imp,frete.f1,com.val);
+    fillCenario('c2',preco,custo,outros,imp,0,com.val);
   } else {
-    document.getElementById('c1-titulo').textContent = '🔴 Com taxa de envio (6%)';
-    document.getElementById('c2-titulo').textContent = '🔵 Sem taxa de envio';
-    fillCenario('c1', preco, custo, outros, imp, frete.f1, com.val);
-    fillCenario('c2', preco, custo, outros, imp, 0, com.val);
+    document.getElementById('c1-titulo').textContent='🔴 Com taxa de envio (6%)';
+    document.getElementById('c2-titulo').textContent='🔵 Sem taxa de envio';
+    fillCenario('c1',preco,custo,outros,imp,frete.f1,com.val);
+    fillCenario('c2',preco,custo,outros,imp,0,com.val);
   }
   ci.style.display='block';
-  document.getElementById('com-info-texto').innerHTML = `Comissão aplicada: <strong>${com.label}</strong> = <strong>${fmt(com.val)}</strong> sobre R$ ${preco.toFixed(2).replace('.',',')}`;
-}
-function fillCenario(id, preco, custo, outros, imp, frete, com){
-  const lucro = preco - custo - outros - imp - frete - com;
-  const margem = (lucro/preco)*100;
-  document.getElementById(id+'-custo').textContent = fmt(custo);
-  document.getElementById(id+'-outros').textContent = fmt(outros);
-  document.getElementById(id+'-imp').textContent = fmt(imp);
-  document.getElementById(id+'-frete').textContent = fmt(frete);
-  document.getElementById(id+'-com').textContent = fmt(com);
-  document.getElementById(id+'-lucro').textContent = fmt(lucro);
-  document.getElementById(id+'-margem').textContent = pct(margem);
-}
-function set(valId, val, metId, cls){
-  document.getElementById(valId).textContent = val;
-  document.getElementById(metId).className = 'metrica ' + cls;
+  document.getElementById('com-info-texto').innerHTML='Comissão aplicada: <strong>'+com.label+'</strong> = <strong>'+fmt(com.val)+'</strong> sobre R$ '+preco.toFixed(2).replace('.',',');
 }
 
-
-// BUSCA DE CATEGORIA ML
-
-let catTimer = null;
-let classicoBase = 12;
-let premiumBase = 17;
-
-function debunceBuscarCat() {
-  clearTimeout(catTimer);
-  catTimer = setTimeout(buscarCategoria, 400);
+function fillCenario(id,preco,custo,outros,imp,frete,com){
+  const lucro=preco-custo-outros-imp-frete-com;
+  const margem=(lucro/preco)*100;
+  document.getElementById(id+'-custo').textContent=fmt(custo);
+  document.getElementById(id+'-outros').textContent=fmt(outros);
+  document.getElementById(id+'-imp').textContent=fmt(imp);
+  document.getElementById(id+'-frete').textContent=fmt(frete);
+  document.getElementById(id+'-com').textContent=fmt(com);
+  document.getElementById(id+'-lucro').textContent=fmt(lucro);
+  document.getElementById(id+'-margem').textContent=pct(margem);
 }
 
-async function buscarCategoria() {
-  var q = (document.getElementById('cat-search').value || '').trim();
-  var results = document.getElementById('cat-results');
-  if (q.length < 3) { results.style.display = 'none'; return; }
-  results.style.display = 'block';
-  results.innerHTML = '<p style="padding:10px;color:#6b7280;font-size:12px;">Buscando...</p>';
-  try {
-    var res = await fetch(APPS_SCRIPT_URL + '?action=search_cat&q=' + encodeURIComponent(q));
-    var data = await res.json();
-    if (!data || data.error || !Array.isArray(data) || data.length === 0) {
-      results.innerHTML = '<p style="padding:10px;color:#ef4444;font-size:12px;">Nenhuma categoria encontrada.</p>';
-      return;
-    }
-    results.innerHTML = '';
-    data.forEach(function(cat) {
-      var nome = (cat.domain_name || cat.category_name || cat.category_id || '');
-      var catNome = (cat.category_name || '');
-      var catId = (cat.category_id || '');
-      var div = document.createElement('div');
-      div.style.cssText = 'padding:10px 12px;cursor:pointer;border-bottom:1px solid #1a1f2e;font-size:13px;color:#e2e8f0;';
-      div.dataset.catId = catId;
-      div.dataset.nome = nome;
-      div.innerHTML = '<div style="font-weight:600;">' + nome + '</div><div style="font-size:11px;color:#6b7280;">' + catNome + '</div>';
-      div.onmouseover = function() { this.style.background = '#2a2f3e'; };
-      div.onmouseout = function() { this.style.background = 'transparent'; };
-      div.onclick = function() { selecionarCategoria(this.dataset.catId, this.dataset.nome); };
-      results.appendChild(div);
-    });
-  } catch(e) {
-    results.innerHTML = '<p style="padding:10px;color:#ef4444;font-size:12px;">Erro: ' + e.message + '</p>';
-  }
+function set(valId,val,metId,cls){
+  document.getElementById(valId).textContent=val;
+  document.getElementById(metId).className='metrica '+cls;
 }
 
-async function selecionarCategoria(catId, nome) {
-  document.getElementById('cat-results').style.display = 'none';
-  document.getElementById('cat-search').value = nome;
-  var sel = document.getElementById('cat-selecionada');
-  if (!sel) return;
-  sel.style.display = 'block';
-  sel.textContent = 'Buscando taxas para: ' + nome;
-  try {
-    var preco = parseFloat(document.getElementById('preco_venda').value) || 100;
-    var res = await fetch(APPS_SCRIPT_URL + '?action=get_fee&cat_id=' + catId + '&price=' + preco);
-    var data = await res.json();
-    if (data && data.classico_pct) {
-      classicoBase = data.classico_pct;
-      premiumBase = data.premium_pct;
-      var lblC = document.getElementById('lbl-classico');
-      var lblP = document.getElementById('lbl-premium');
-      if (lblC) lblC.textContent = classicoBase + '%';
-      if (lblP) lblP.textContent = premiumBase + '%';
-      var infoEl = document.getElementById('com-info-ml');
-      if (infoEl) infoEl.textContent = 'Categoria: ' + nome + ' - Classico: ' + classicoBase + '% - Premium: ' + premiumBase + '%';
-      sel.textContent = 'OK: ' + nome + ' - Classico: ' + classicoBase + '% - Premium: ' + premiumBase + '%';
-      var isTipoPremium = parseFloat(document.getElementById('ml-com-pct').value) > 14;
-      setTipoAnuncio(isTipoPremium ? 'premium' : 'classico');
+// ═══════════════════════════════════
+// NAVEGAÇÃO POR ÁRVORE DE CATEGORIAS
+// ═══════════════════════════════════
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poGPliIw1y5CdYdkYEpUycewuNMM8OPjgBIWpVCDnBIfyso0hhvotxg/exec';
+const ML_AUTH_URL='https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=4369092053425585&redirect_uri=https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poGPliIw1y5CdYdkYEpUycewuNMM8OPjgBIWpVCDnBIfyso0hhvotxg/exec';
+let mlToken=null;
+let catPath=[];
+
+async function carregarCategorias(catId){
+  const tree=document.getElementById('cat-tree');
+  const breadcrumb=document.getElementById('cat-breadcrumb');
+  tree.innerHTML='<div style="padding:12px;color:#6b7280;font-size:12px;text-align:center;">⏳ Carregando...</div>';
+  try{
+    const res=await fetch(APPS_SCRIPT_URL+'?action=get_categories&cat_id='+catId);
+    const data=await res.json();
+    if(data.error){tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro: '+data.error+'</div>';return;}
+    tree.innerHTML='';
+    if(data.is_root){
+      catPath=[];
+      breadcrumb.innerHTML='<span style="color:#FFE600;">🏠 Início</span>';
+      data.categories.forEach(function(cat){
+        var div=document.createElement('div');
+        div.className='cat-item';
+        div.innerHTML='<span>'+cat.name+'</span><span class="cat-arrow">›</span>';
+        div.onclick=function(){carregarCategorias(cat.id);};
+        tree.appendChild(div);
+      });
     } else {
-      sel.textContent = 'Nao foi possivel obter a taxa exata. Usando padrao.';
+      catPath=data.path||[];
+      var bc='<span onclick="carregarCategorias(\'\')" style="cursor:pointer;color:#FFE600;">🏠</span>';
+      catPath.forEach(function(p){
+        bc+=' <span style="color:#4b5563;">›</span> <span onclick="carregarCategorias(\''+p.id+'\')" style="cursor:pointer;color:#6b7280;">'+p.name+'</span>';
+      });
+      breadcrumb.innerHTML=bc;
+      if(data.has_children){
+        data.children.forEach(function(cat){
+          var div=document.createElement('div');
+          div.className='cat-item';
+          div.innerHTML='<span>'+cat.name+'</span><span class="cat-arrow">›</span>';
+          div.onclick=function(){carregarCategorias(cat.id);};
+          tree.appendChild(div);
+        });
+        var sel=document.createElement('div');
+        sel.className='cat-item final';
+        sel.innerHTML='<span>✅ Usar esta categoria ('+data.name+')</span>';
+        sel.onclick=function(){selecionarCategoria(data.id,data.name);};
+        tree.appendChild(sel);
+      } else {
+        var div=document.createElement('div');
+        div.className='cat-item final';
+        div.innerHTML='<span>✅ '+data.name+'</span>';
+        div.onclick=function(){selecionarCategoria(data.id,data.name);};
+        tree.appendChild(div);
+      }
     }
-  } catch(e) {
-    sel.textContent = 'Erro ao buscar taxa. Mantendo valor atual.';
-  }
+  }catch(e){tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar categorias.</div>';}
 }
 
-document.addEventListener('click', function(e) {
-  var catResults = document.getElementById('cat-results');
-  var catSearch = document.getElementById('cat-search');
-  if (catResults && catSearch && !catSearch.contains(e.target) && !catResults.contains(e.target)) {
-    catResults.style.display = 'none';
-  }
-});
+async function selecionarCategoria(catId,nome){
+  var sel=document.getElementById('cat-selecionada');
+  sel.style.display='block';
+  sel.textContent='⏳ Buscando taxa de '+nome+'...';
+  try{
+    var preco=parseFloat(document.getElementById('preco_venda').value)||parseFloat(document.getElementById('custo').value)*2||100;
+    var res=await fetch(APPS_SCRIPT_URL+'?action=get_fee&cat_id='+catId+'&price='+preco);
+    var data=await res.json();
+    if(data.classico_pct){
+      classicoBase=data.classico_pct;
+      premiumBase=data.premium_pct;
+      var lblC=document.getElementById('lbl-classico');
+      var lblP=document.getElementById('lbl-premium');
+      if(lblC) lblC.textContent=classicoBase+'%';
+      if(lblP) lblP.textContent=premiumBase+'%';
+      var infoEl=document.getElementById('com-info-ml');
+      if(infoEl) infoEl.textContent='Categoria: '+nome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';
+      sel.textContent='✅ '+nome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';
+      var isTipoPremium=parseFloat(document.getElementById('ml-com-pct').value)>14;
+      setTipoAnuncio(isTipoPremium?'premium':'classico');
+    } else {
+      sel.textContent='⚠️ Não foi possível obter a taxa. Usando padrão.';
+    }
+  }catch(e){sel.textContent='⚠️ Erro ao buscar taxa. Mantendo valor atual.';}
+}
 
 // ═══════════════════════════════════
 // INTEGRAÇÃO API MERCADO LIVRE
 // ═══════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poGPliIw1y5CdYdkYEpUycewuNMM8OPjgBIWpVCDnBIfyso0hhvotxg/exec';
-const ML_AUTH_URL = 'https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=4369092053425585&redirect_uri=https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poGPliIw1y5CdYdkYEpUycewuNMM8OPjgBIWpVCDnBIfyso0hhvotxg/exec';
-let mlToken = null;
+async function initML(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const ml=params.get('ml');
+  if(code){window.history.replaceState({},document.title,window.location.pathname);await trocarCodePorToken(code);}
+  else if(ml==='ok'){window.history.replaceState({},document.title,window.location.pathname);await obterTokenSalvo();}
+  else{await obterTokenSalvo();}
+  carregarCategorias('');
+}
 
-async function initML() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if (code) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    await trocarCodePorToken(code);
-  } else {
-    await obterTokenSalvo();
-  }
-}
-async function trocarCodePorToken(code) {
-  try {
+async function trocarCodePorToken(code){
+  try{
     mostrarStatusML('🔄 Conectando ao Mercado Livre...');
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=exchange&code=${encodeURIComponent(code)}`);
-    const text = await res.text();
+    const res=await fetch(APPS_SCRIPT_URL+'?action=exchange&code='+encodeURIComponent(code));
+    const text=await res.text();
     let data;
-    try { data = JSON.parse(text); } catch(e) {
-      mostrarStatusML('❌ Resposta inválida: ' + text.substring(0,120) + ' — <a href="' + ML_AUTH_URL + '" style="color:#FFE600">Tentar novamente</a>');
-      return;
-    }
-    if (data.access_token) {
-      mlToken = data.access_token;
-      mostrarStatusML('✅ Conectado ao ML');
-      await carregarDadosML();
-    } else {
-      mostrarStatusML('❌ ' + (data.error || JSON.stringify(data)).substring(0,120) + ' — <a href="' + ML_AUTH_URL + '" style="color:#FFE600">Tentar novamente</a>');
-    }
-  } catch(e) {
-    mostrarStatusML('❌ Falha: ' + e.message + ' — <a href="' + ML_AUTH_URL + '" style="color:#FFE600">Tentar novamente</a>');
-  }
+    try{data=JSON.parse(text);}catch(e){mostrarStatusML('❌ Resposta inválida. <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');return;}
+    if(data.access_token){mlToken=data.access_token;mostrarStatusML('✅ ML conectado');await carregarDadosML();}
+    else{mostrarStatusML('❌ '+(data.error||JSON.stringify(data)).substring(0,100)+' <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');}
+  }catch(e){mostrarStatusML('❌ Falha: '+e.message+' <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');}
 }
-async function obterTokenSalvo() {
-  try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=token`);
-    const text = await res.text();
+
+async function obterTokenSalvo(){
+  try{
+    const res=await fetch(APPS_SCRIPT_URL+'?action=token');
+    const text=await res.text();
     let data;
-    try { data = JSON.parse(text); } catch(e) {
-      mostrarStatusML('🔑 <a href="' + ML_AUTH_URL + '" style="color:#FFE600;font-weight:700;">Conectar ao Mercado Livre</a>');
-      return;
-    }
-    if (data.access_token) {
-      mlToken = data.access_token;
-      mostrarStatusML('✅ ML conectado');
-      await carregarDadosML();
-    } else {
-      mostrarStatusML('🔑 <a href="' + ML_AUTH_URL + '" style="color:#FFE600;font-weight:700;">Clique aqui para conectar ao Mercado Livre</a>');
-    }
-  } catch(e) {
-    mostrarStatusML('🔑 <a href="' + ML_AUTH_URL + '" style="color:#FFE600;font-weight:700;">Conectar ao Mercado Livre</a>');
-  }
+    try{data=JSON.parse(text);}catch(e){mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Clique aqui para conectar ao Mercado Livre</a>');return;}
+    if(data.access_token){mlToken=data.access_token;mostrarStatusML('✅ ML conectado');await carregarDadosML();}
+    else{mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Clique aqui para conectar ao Mercado Livre</a>');}
+  }catch(e){mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Conectar ao Mercado Livre</a>');}
 }
-async function carregarDadosML() {
-  if (!mlToken) return;
-  try {
-    const res = await fetch('https://api.mercadolibre.com/users/me', {
-      headers: { 'Authorization': 'Bearer ' + mlToken }
-    });
-    const user = await res.json();
-    if (user.id) {
-      mostrarStatusML(`✅ ML conectado: <strong style="color:#FFE600">${user.nickname}</strong>`);
-    }
-  } catch(e) {
-    console.log('Erro ML:', e);
-  }
+
+async function carregarDadosML(){
+  if(!mlToken) return;
+  try{
+    const res=await fetch('https://api.mercadolibre.com/users/me',{headers:{'Authorization':'Bearer '+mlToken}});
+    const user=await res.json();
+    if(user.id) mostrarStatusML('✅ ML conectado: <strong style="color:#FFE600">'+user.nickname+'</strong>');
+  }catch(e){console.log('Erro ML:',e);}
 }
-function mostrarStatusML(msg) {
-  let el = document.getElementById('ml-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'ml-status';
-    el.style.cssText = 'text-align:center;font-size:12px;padding:10px 16px;background:#141824;border:1px solid #1a1f2e;border-radius:8px;margin-bottom:14px;color:#6b7280;';
-    const container = document.querySelector('.container');
-    const platTabs = document.querySelector('.plat-tabs');
-    container.insertBefore(el, platTabs);
+
+function mostrarStatusML(msg){
+  let el=document.getElementById('ml-status');
+  if(!el){
+    el=document.createElement('div');
+    el.id='ml-status';
+    el.style.cssText='text-align:center;font-size:12px;padding:10px 16px;background:#141824;border:1px solid #1a1f2e;border-radius:8px;margin-bottom:14px;color:#6b7280;';
+    const container=document.querySelector('.container');
+    const platTabs=document.querySelector('.plat-tabs');
+    container.insertBefore(el,platTabs);
   }
-  el.innerHTML = msg;
+  el.innerHTML=msg;
 }
-window.addEventListener('DOMContentLoaded', initML);
+
+window.addEventListener('DOMContentLoaded',initML);
 </script>
 </body>
 </html>
