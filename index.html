@@ -74,6 +74,8 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 .cat-item:last-child { border-bottom: none; }
 .cat-item .cat-arrow { color: #6b7280; font-size: 12px; }
 .cat-item.final { color: #22c55e; }
+.prod-bar { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
+@media(max-width:600px){ .prod-bar { grid-template-columns: 1fr 1fr; } .prod-bar > div:first-child { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -91,6 +93,16 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <button class="plat-tab ml active" onclick="setPlat('ml')">🟡 Mercado Livre</button>
 <button class="plat-tab sh" onclick="setPlat('sh')">🟠 Shopee</button>
 <button class="plat-tab tik" onclick="setPlat('tik')">⚫ TikTok Shop</button>
+</div>
+
+<div class="card">
+<div class="card-title neutro">📁 Meus Produtos <span style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0;">— salvos neste navegador</span></div>
+<div class="prod-bar">
+<div><label>Nome do produto</label><input type="text" id="prod_nome" placeholder="ex: Desempenadeira dentada 20cm" /></div>
+<button onclick="salvarProduto()" style="padding:9px 16px;border-radius:7px;border:none;background:#22c55e;color:#04150a;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">💾 Salvar</button>
+<button onclick="limparTudo()" style="padding:9px 14px;border-radius:7px;border:1px solid #2a2f3e;background:transparent;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Limpar</button>
+</div>
+<div id="lista-produtos" style="margin-top:12px;"></div>
 </div>
 
 <div class="card">
@@ -136,7 +148,13 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 </div>
 <div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% · Navegue pela árvore acima para ver a taxa exata da sua categoria.</div>
 </div>
-<div id="com-sh" style="display:none;"><div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16 &nbsp;|&nbsp; <strong>R$100–R$199,99:</strong> 14% + R$20<br><strong>R$200–R$499,99:</strong> 14% + R$26 &nbsp;|&nbsp; <strong>Acima R$500:</strong> 14% + R$26</div></div>
+<div id="com-sh" style="display:none;">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;">
+<input type="checkbox" id="sh_campanha" onchange="calc()" style="width:auto;margin:0;cursor:pointer;" />
+<label for="sh_campanha" style="margin:0;font-size:12px;color:#e2e8f0;cursor:pointer;">Participando de campanha Shopee <span style="color:#f59e0b;font-weight:700;">+2,5%</span></label>
+</div>
+<div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$7,99:</strong> 50% &nbsp;|&nbsp; <strong>R$8–R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16<br><strong>R$100–R$199,99:</strong> 14% + R$20 &nbsp;|&nbsp; <strong>R$200 ou mais:</strong> 14% + R$26<br><span style="color:#4b5563;font-size:11px;">Teto de R$100 na comissão foi removido em março/2026.</span></div>
+</div>
 <div id="com-tik" style="display:none;"><div class="com-info">Comissão TikTok Shop automática por faixa de preço:<br><strong>Até R$50:</strong> 10% + R$4 &nbsp;|&nbsp; <strong>Acima R$50:</strong> 6% + R$6<br>Taxa de Envio (frete): <strong>6% sobre o valor do pedido</strong></div></div>
 </div>
 </div>
@@ -168,7 +186,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div class="metrica" id="m-lucro"><div class="metrica-val" id="v-lucro">—</div><div class="metrica-label">Lucro / unid</div></div>
 <div class="metrica" id="m-margem"><div class="metrica-val" id="v-margem">—</div><div class="metrica-label">Margem real</div></div>
 <div class="metrica" id="m-roi"><div class="metrica-val" id="v-roi">—</div><div class="metrica-label">ROI</div></div>
-<div class="metrica" id="m-break"><div class="metrica-val" id="v-break">—</div><div class="metrica-label">Break-even</div></div>
+<div class="metrica" id="m-break"><div class="metrica-val" id="v-break">—</div><div class="metrica-label">Break-even<br><span style="color:#374151;">preço de lucro zero</span></div></div>
 </div>
 
 <div class="cenarios" id="cenarios" style="display:none;">
@@ -280,7 +298,7 @@ const ML_FRETE=[
 {max:Infinity,v:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95]}
 ];
 const ML_FAIXAS=[18.99,48.99,78.99,99.99,119.99,149.99,199.99,Infinity];
-const SH_COM=[{max:79.99,pct:0.20,fixo:4},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:499.99,pct:0.14,fixo:26},{max:Infinity,pct:0.14,fixo:26}];
+const SH_COM=[{max:7.99,pct:0.50,fixo:0},{max:79.99,pct:0.20,fixo:4},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:Infinity,pct:0.14,fixo:26}];
 const SH_FRETE=[{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},{max:3,c:35},{max:5,c:45},{max:7,c:55},{max:10,c:65},{max:15,c:80},{max:20,c:95},{max:30,c:115},{max:Infinity,c:140}];
 const TIK_COM=[{max:50,pct:0.10,fixo:4},{max:Infinity,pct:0.06,fixo:6}];
 let plat='ml';
@@ -418,7 +436,17 @@ function calcFrete(){
 
 function getComissao(preco){
   if(plat==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
-  if(plat==='sh'){for(const f of SH_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
+  if(plat==='sh'){
+    var camp=document.getElementById('sh_campanha');
+    var extra=(camp&&camp.checked)?0.025:0;
+    for(const f of SH_COM){
+      if(preco<=f.max){
+        var total=preco*(f.pct+extra)+f.fixo;
+        var lbl=(f.pct*100).toFixed(0)+'%'+(extra>0?' + 2,5% campanha':'')+(f.fixo>0?' + R$'+f.fixo:'');
+        return{val:total,label:lbl};
+      }
+    }
+  }
   if(plat==='tik'){for(const f of TIK_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
   return{val:0,label:'—'};
 }
@@ -461,13 +489,14 @@ function calc(){
   const cen=document.getElementById('cenarios');
   const ci=document.getElementById('card-com-info');
   if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';return;}
-  function calcPrecoSug(custoBase){
-    let p=custoBase/Math.max(0.01,1-impPct/100-margDes/100);
-    for(let i=0;i<15;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(margDes/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
+  function calcPrecoSug(custoBase,mrg){
+    let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100);
+    for(let i=0;i<25;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(mrg/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
     return p;
   }
   const custoBase=custo+outros;
-  const precoSug=calcPrecoSug(custoBase);
+  const precoSug=calcPrecoSug(custoBase,margDes);
+  const precoBE=calcPrecoSug(custoBase,0);
   const preco=precoM>0?precoM:precoSug;
   const frete=getFrete(preco);
   const com=getComissao(preco);
@@ -485,8 +514,8 @@ function calc(){
   set('v-lucro',fmt(lucro),'m-lucro',margR>=20?'ok':margR>=10?'warn':'bad');
   set('v-margem',pct(margR),'m-margem',margR>=25?'ok':margR>=12?'warn':'bad');
   set('v-roi',pct(roi),'m-roi',roi>=40?'ok':roi>=20?'warn':'bad');
-  document.getElementById('v-break').textContent=fmt(precoSug);
-  document.getElementById('m-break').className='metrica';
+  document.getElementById('v-break').textContent=fmt(precoBE);
+  document.getElementById('m-break').className='metrica'+(preco>precoBE*1.05?' ok':preco>=precoBE?' warn':' bad');
   cen.style.display='grid';
   const comLabel=plat==='ml'?'Comissão ML':plat==='sh'?'Comissão Shopee':'Comissão TikTok';
   document.getElementById('c1-com-label').textContent=comLabel;
@@ -535,6 +564,8 @@ const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poG
 const ML_AUTH_URL='https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=4369092053425585&redirect_uri=https://script.google.com/macros/s/AKfycbytVKPewcXxbC7poGPliIw1y5CdYdkYEpUycewuNMM8OPjgBIWpVCDnBIfyso0hhvotxg/exec';
 let mlToken=null;
 let catPath=[];
+let catNomeSel='';
+let catIdSel='';
 
 async function carregarCategorias(catId){
   const tree=document.getElementById('cat-tree');
@@ -550,7 +581,7 @@ async function carregarCategorias(catId){
     tree.innerHTML='';
     if(!catId){
       // Root: lista de categorias principais
-      breadcrumb.innerHTML='<button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
+      breadcrumb.innerHTML='<button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
       (Array.isArray(data)?data:[]).forEach(function(cat){
         var div=document.createElement('div');
         div.className='cat-item';
@@ -561,11 +592,11 @@ async function carregarCategorias(catId){
     } else {
       // Subcategoria
       var path=data.path_from_root||[];
-      var bc='<button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
+      var bc='<button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
       path.forEach(function(p,i){
         bc+=' <span style="color:#4b5563;">›</span> ';
         if(i<path.length-1){
-          bc+='<button onclick="carregarCategorias(''+p.id+'')" style="color:#9ca3af;background:none;border:none;cursor:pointer;font-size:11px;padding:0;">'+p.name+'</button>';
+          bc+='<button onclick="carregarCategorias(\''+p.id+'\')" style="color:#9ca3af;background:none;border:none;cursor:pointer;font-size:11px;padding:0;">'+p.name+'</button>';
         } else {
           bc+='<span style="color:#e2e8f0;font-size:11px;">'+p.name+'</span>';
         }
@@ -596,11 +627,8 @@ async function carregarCategorias(catId){
       }
     }
   }catch(e){
-    tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar. <button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
+    tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar. <button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
   }
-}
-    }
-  }catch(e){tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar categorias.</div>';}
 }
 
 async function selecionarCategoria(catId,nome){
@@ -621,8 +649,10 @@ async function selecionarCategoria(catId,nome){
       var infoEl=document.getElementById('com-info-ml');
       if(infoEl) infoEl.textContent='Categoria: '+nome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';
       sel.textContent='✅ '+nome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';
+      catNomeSel=nome; catIdSel=catId;
       var isTipoPremium=parseFloat(document.getElementById('ml-com-pct').value)>14;
       setTipoAnuncio(isTipoPremium?'premium':'classico');
+      salvarUltimo();
     } else {
       sel.textContent='⚠️ Não foi possível obter a taxa. Usando padrão.';
     }
@@ -687,7 +717,179 @@ function mostrarStatusML(msg){
   el.innerHTML=msg;
 }
 
-window.addEventListener('DOMContentLoaded',initML);
+// ═══════════════════════════════════
+// SALVAMENTO NO NAVEGADOR (localStorage)
+// ═══════════════════════════════════
+var LS_ULTIMO='calc_ultimo_v1';
+var LS_PRODUTOS='calc_produtos_v1';
+var CAMPOS=['prod_nome','custo','imposto','margem','outros','preco_venda','peso_global','dim_c','dim_l','dim_a','ml-com-pct','promo_pct','cupom_pct','afiliado_pct','ads_gasto','ads_receita_ads','ads_receita_total'];
+
+function lsGet(chave,padrao){
+  try{var v=localStorage.getItem(chave);return v?JSON.parse(v):padrao;}catch(e){return padrao;}
+}
+function lsSet(chave,valor){
+  try{localStorage.setItem(chave,JSON.stringify(valor));return true;}catch(e){return false;}
+}
+
+function coletarEstado(){
+  var o={plat:plat,classicoBase:classicoBase,premiumBase:premiumBase,catNome:catNomeSel,catId:catIdSel};
+  CAMPOS.forEach(function(id){var el=document.getElementById(id);if(el)o[id]=el.value;});
+  var camp=document.getElementById('sh_campanha');
+  o.sh_campanha=camp?camp.checked:false;
+  return o;
+}
+
+function aplicarEstado(o){
+  if(!o)return;
+  CAMPOS.forEach(function(id){var el=document.getElementById(id);if(el&&o[id]!==undefined)el.value=o[id];});
+  var camp=document.getElementById('sh_campanha');
+  if(camp)camp.checked=!!o.sh_campanha;
+  if(o.classicoBase)classicoBase=o.classicoBase;
+  if(o.premiumBase)premiumBase=o.premiumBase;
+  var lblC=document.getElementById('lbl-classico');
+  var lblP=document.getElementById('lbl-premium');
+  if(lblC)lblC.textContent=classicoBase+'%';
+  if(lblP)lblP.textContent=premiumBase+'%';
+  if(o.catNome){
+    catNomeSel=o.catNome; catIdSel=o.catId||'';
+    var sel=document.getElementById('cat-selecionada');
+    if(sel){sel.style.display='block';sel.textContent='✅ '+o.catNome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';}
+    var infoEl=document.getElementById('com-info-ml');
+    if(infoEl)infoEl.textContent='Categoria: '+o.catNome+' — Clássico: '+classicoBase+'% — Premium: '+premiumBase+'%';
+  }
+  // destaca o botão do tipo de anúncio conforme a comissão restaurada
+  var comAtual=parseFloat(o['ml-com-pct'])||classicoBase;
+  var btnC=document.getElementById('btn-classico');
+  var btnP=document.getElementById('btn-premium');
+  if(btnC&&btnP){
+    var ehPremium=Math.abs(comAtual-premiumBase)<Math.abs(comAtual-classicoBase);
+    var ativo=ehPremium?btnP:btnC, inativo=ehPremium?btnC:btnP;
+    ativo.style.borderColor='#FFE600';ativo.style.color='#FFE600';ativo.style.background='rgba(255,230,0,.08)';
+    inativo.style.borderColor='#2a2f3e';inativo.style.color='#6b7280';inativo.style.background='transparent';
+  }
+  setPlat(o.plat||'ml');
+  sincronizarPeso();
+  calcPromo();
+  calcAcos();
+}
+
+var timerSalvar=null;
+function salvarUltimo(){
+  clearTimeout(timerSalvar);
+  timerSalvar=setTimeout(function(){lsSet(LS_ULTIMO,coletarEstado());},400);
+}
+
+function salvarProduto(){
+  var nomeEl=document.getElementById('prod_nome');
+  var nome=(nomeEl.value||'').trim();
+  if(!nome){nomeEl.focus();avisoProdutos('⚠️ Dê um nome ao produto antes de salvar.','#f59e0b');return;}
+  var custo=parseFloat(document.getElementById('custo').value)||0;
+  if(custo<=0){avisoProdutos('⚠️ Preencha o custo do produto antes de salvar.','#f59e0b');return;}
+  var lista=lsGet(LS_PRODUTOS,[]);
+  var estado=coletarEstado();
+  var idx=-1;
+  for(var i=0;i<lista.length;i++){if(lista[i].nome.toLowerCase()===nome.toLowerCase()){idx=i;break;}}
+  var reg={nome:nome,quando:new Date().toLocaleDateString('pt-BR'),estado:estado};
+  if(idx>=0)lista[idx]=reg; else lista.unshift(reg);
+  if(lsSet(LS_PRODUTOS,lista)){
+    renderProdutos();
+    avisoProdutos((idx>=0?'✅ "'+nome+'" atualizado.':'✅ "'+nome+'" salvo.'),'#22c55e');
+  } else {
+    avisoProdutos('⚠️ Não consegui salvar. O navegador pode estar em modo anônimo.','#ef4444');
+  }
+}
+
+function carregarProduto(i){
+  var lista=lsGet(LS_PRODUTOS,[]);
+  if(!lista[i])return;
+  aplicarEstado(lista[i].estado);
+  renderProdutos();
+  avisoProdutos('📂 "'+lista[i].nome+'" carregado.','#60a5fa');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function excluirProduto(i){
+  var lista=lsGet(LS_PRODUTOS,[]);
+  if(!lista[i])return;
+  if(!confirm('Excluir "'+lista[i].nome+'"?'))return;
+  var nome=lista[i].nome;
+  lista.splice(i,1);
+  lsSet(LS_PRODUTOS,lista);
+  renderProdutos();
+  avisoProdutos('🗑️ "'+nome+'" excluído.','#6b7280');
+}
+
+function limparTudo(){
+  if(!confirm('Limpar todos os campos? Os produtos salvos não serão apagados.'))return;
+  CAMPOS.forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(id==='imposto')el.value='8';
+    else if(id==='margem')el.value='30';
+    else if(id==='ml-com-pct')el.value=classicoBase;
+    else if(id==='outros'||id==='promo_pct'||id==='cupom_pct'||id==='afiliado_pct')el.value='0';
+    else el.value='';
+  });
+  var camp=document.getElementById('sh_campanha');
+  if(camp)camp.checked=false;
+  document.getElementById('acos-resultado').style.display='none';
+  sincronizarPeso();
+  calc();
+  salvarUltimo();
+  avisoProdutos('🧹 Campos limpos.','#6b7280');
+}
+
+function avisoProdutos(msg,cor){
+  var el=document.getElementById('aviso-produtos');
+  if(!el){
+    el=document.createElement('div');
+    el.id='aviso-produtos';
+    el.style.cssText='font-size:12px;margin-top:10px;font-weight:600;';
+    document.getElementById('lista-produtos').parentNode.appendChild(el);
+  }
+  el.style.color=cor;
+  el.textContent=msg;
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.textContent='';},3500);
+}
+
+function renderProdutos(){
+  var cx=document.getElementById('lista-produtos');
+  if(!cx)return;
+  var lista=lsGet(LS_PRODUTOS,[]);
+  if(!lista.length){
+    cx.innerHTML='<div style="font-size:11px;color:#4b5563;">Nenhum produto salvo ainda. Preencha os custos, dê um nome e clique em Salvar.</div>';
+    return;
+  }
+  var h='<div style="display:flex;flex-wrap:wrap;gap:7px;">';
+  lista.forEach(function(p,i){
+    var nome=p.nome.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var c=parseFloat(p.estado&&p.estado.custo)||0;
+    h+='<div style="display:flex;align-items:center;gap:6px;background:#0b0e14;border:1px solid #1e2533;border-radius:7px;padding:6px 8px 6px 11px;">'
+      +'<button onclick="carregarProduto('+i+')" title="Carregar" style="background:none;border:none;color:#e2e8f0;font-size:12px;font-weight:600;cursor:pointer;padding:0;text-align:left;">'+nome
+      +'<span style="color:#4b5563;font-weight:400;"> · R$ '+c.toFixed(2).replace('.',',')+'</span></button>'
+      +'<button onclick="excluirProduto('+i+')" title="Excluir" style="background:none;border:none;color:#4b5563;font-size:14px;cursor:pointer;padding:0 2px;line-height:1;">×</button>'
+      +'</div>';
+  });
+  h+='</div>';
+  cx.innerHTML=h;
+}
+
+function iniciarPersistencia(){
+  renderProdutos();
+  var ultimo=lsGet(LS_ULTIMO,null);
+  if(ultimo)aplicarEstado(ultimo);
+  document.addEventListener('input',salvarUltimo);
+  document.addEventListener('change',salvarUltimo);
+  document.querySelectorAll('.plat-tab, #btn-classico, #btn-premium').forEach(function(b){
+    b.addEventListener('click',salvarUltimo);
+  });
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  iniciarPersistencia();
+  initML();
+});
 </script>
 </body>
 </html>
