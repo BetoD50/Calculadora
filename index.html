@@ -541,14 +541,17 @@ async function carregarCategorias(catId){
   const breadcrumb=document.getElementById('cat-breadcrumb');
   tree.innerHTML='<div style="padding:12px;color:#6b7280;font-size:12px;text-align:center;">⏳ Carregando...</div>';
   try{
-    const res=await fetch(APPS_SCRIPT_URL+'?action=get_categories&cat_id='+catId);
+    // Categorias ML são dados públicos — sem token necessário
+    var url = catId
+      ? 'https://api.mercadolibre.com/categories/'+catId
+      : 'https://api.mercadolibre.com/sites/MLB/categories';
+    const res=await fetch(url);
     const data=await res.json();
-    if(data.error){tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro: '+data.error+'</div>';return;}
     tree.innerHTML='';
-    if(data.is_root){
-      catPath=[];
-      breadcrumb.innerHTML='<span style="color:#FFE600;">🏠 Início</span>';
-      data.categories.forEach(function(cat){
+    if(!catId){
+      // Root: lista de categorias principais
+      breadcrumb.innerHTML='<button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
+      (Array.isArray(data)?data:[]).forEach(function(cat){
         var div=document.createElement('div');
         div.className='cat-item';
         div.innerHTML='<span>'+cat.name+'</span><span class="cat-arrow">›</span>';
@@ -556,32 +559,46 @@ async function carregarCategorias(catId){
         tree.appendChild(div);
       });
     } else {
-      catPath=data.path||[];
-      var bc='<span onclick="carregarCategorias(\'\')" style="cursor:pointer;color:#FFE600;">🏠</span>';
-      catPath.forEach(function(p){
-        bc+=' <span style="color:#4b5563;">›</span> <span onclick="carregarCategorias(\''+p.id+'\')" style="cursor:pointer;color:#6b7280;">'+p.name+'</span>';
+      // Subcategoria
+      var path=data.path_from_root||[];
+      var bc='<button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
+      path.forEach(function(p,i){
+        bc+=' <span style="color:#4b5563;">›</span> ';
+        if(i<path.length-1){
+          bc+='<button onclick="carregarCategorias(''+p.id+'')" style="color:#9ca3af;background:none;border:none;cursor:pointer;font-size:11px;padding:0;">'+p.name+'</button>';
+        } else {
+          bc+='<span style="color:#e2e8f0;font-size:11px;">'+p.name+'</span>';
+        }
       });
       breadcrumb.innerHTML=bc;
-      if(data.has_children){
-        data.children.forEach(function(cat){
+      var children=data.children_categories||[];
+      if(children.length>0){
+        children.forEach(function(cat){
           var div=document.createElement('div');
           div.className='cat-item';
           div.innerHTML='<span>'+cat.name+'</span><span class="cat-arrow">›</span>';
           div.onclick=function(){carregarCategorias(cat.id);};
           tree.appendChild(div);
         });
+        // Opção de usar a categoria atual
         var sel=document.createElement('div');
         sel.className='cat-item final';
-        sel.innerHTML='<span>✅ Usar esta categoria ('+data.name+')</span>';
+        sel.innerHTML='<span>✅ Usar: <strong>'+data.name+'</strong></span>';
         sel.onclick=function(){selecionarCategoria(data.id,data.name);};
         tree.appendChild(sel);
       } else {
+        // Categoria folha — selecionar direto
         var div=document.createElement('div');
         div.className='cat-item final';
-        div.innerHTML='<span>✅ '+data.name+'</span>';
+        div.innerHTML='<span>✅ Selecionar: <strong>'+data.name+'</strong></span>';
         div.onclick=function(){selecionarCategoria(data.id,data.name);};
         tree.appendChild(div);
       }
+    }
+  }catch(e){
+    tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar. <button onclick="carregarCategorias('')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
+  }
+}
     }
   }catch(e){tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">Erro ao carregar categorias.</div>';}
 }
