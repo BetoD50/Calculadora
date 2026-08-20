@@ -586,6 +586,11 @@ async function carregarCategorias(catId){
       : 'https://api.mercadolibre.com/sites/MLB/categories';
     const res=await fetch(url);
     const data=await res.json();
+    if(!res.ok || (!catId && !Array.isArray(data))){
+      var msg=(data&&(data.message||data.error))?(data.message||data.error):('HTTP '+res.status);
+      tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">⚠️ O Mercado Livre recusou a busca: <strong>'+msg+'</strong><br><span style="color:#6b7280;">(status '+res.status+')</span> <button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
+      return;
+    }
     tree.innerHTML='';
     if(!catId){
       // Root: lista de categorias principais
