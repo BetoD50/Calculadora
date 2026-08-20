@@ -580,22 +580,25 @@ async function carregarCategorias(catId){
   const breadcrumb=document.getElementById('cat-breadcrumb');
   tree.innerHTML='<div style="padding:12px;color:#6b7280;font-size:12px;text-align:center;">⏳ Carregando...</div>';
   try{
-    // Categorias ML são dados públicos — sem token necessário
-    var url = catId
-      ? 'https://api.mercadolibre.com/categories/'+catId
-      : 'https://api.mercadolibre.com/sites/MLB/categories';
-    const res=await fetch(url);
-    const data=await res.json();
-    if(!res.ok || (!catId && !Array.isArray(data))){
-      var msg=(data&&(data.message||data.error))?(data.message||data.error):('HTTP '+res.status);
-      tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">⚠️ O Mercado Livre recusou a busca: <strong>'+msg+'</strong><br><span style="color:#6b7280;">(status '+res.status+')</span> <button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
+    // Busca via Apps Script (usa o token do ML já autorizado) em vez de bater
+    // direto na API do ML — a API do ML passou a exigir autenticação aqui.
+    var res=await fetch(APPS_SCRIPT_URL+'?action=get_categories&cat_id='+encodeURIComponent(catId||''));
+    var text=await res.text();
+    var data;
+    try{data=JSON.parse(text);}catch(e){
+      tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">⚠️ Resposta inválida do Apps Script. <button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
+      return;
+    }
+    if(data.error || (data.needs_auth)){
+      var msg=data.error||'É preciso reconectar ao Mercado Livre.';
+      tree.innerHTML='<div style="padding:12px;color:#ef4444;font-size:12px;">⚠️ O Mercado Livre recusou a busca: <strong>'+msg+'</strong> <button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;text-decoration:underline;font-size:12px;">Tentar novamente</button></div>';
       return;
     }
     tree.innerHTML='';
     if(!catId){
       // Root: lista de categorias principais
       breadcrumb.innerHTML='<button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
-      (Array.isArray(data)?data:[]).forEach(function(cat){
+      (Array.isArray(data.categories)?data.categories:[]).forEach(function(cat){
         var div=document.createElement('div');
         div.className='cat-item';
         div.innerHTML='<span>'+cat.name+'</span><span class="cat-arrow">›</span>';
@@ -604,7 +607,7 @@ async function carregarCategorias(catId){
       });
     } else {
       // Subcategoria
-      var path=data.path_from_root||[];
+      var path=data.path||[];
       var bc='<button onclick="carregarCategorias(\'\')" style="color:#FFE600;background:none;border:none;cursor:pointer;font-weight:700;font-size:11px;padding:0;">🏠 Início</button>';
       path.forEach(function(p,i){
         bc+=' <span style="color:#4b5563;">›</span> ';
@@ -615,7 +618,7 @@ async function carregarCategorias(catId){
         }
       });
       breadcrumb.innerHTML=bc;
-      var children=data.children_categories||[];
+      var children=data.children||[];
       if(children.length>0){
         children.forEach(function(cat){
           var div=document.createElement('div');
