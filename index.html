@@ -107,6 +107,14 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 
 <div class="card">
 <div class="card-title neutro">💰 Produto e Custos</div>
+<div style="margin-bottom:11px;">
+<label>🔗 SKU no Tiny ERP <span style="color:#374151">busca o custo automaticamente</span></label>
+<div style="display:flex;gap:8px;">
+<input type="text" id="tiny_sku" placeholder="ex: FER-001" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCustoTiny();}" />
+<button onclick="buscarCustoTiny()" id="btn-tiny" style="padding:9px 16px;border-radius:7px;border:none;background:#60a5fa;color:#04101f;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">🔎 Buscar custo</button>
+</div>
+<div id="tiny-status" style="font-size:11px;margin-top:5px;min-height:14px;"></div>
+</div>
 <div class="grid-3" style="margin-bottom:11px;">
 <div><label>Custo do produto (R$)</label><input type="number" id="custo" placeholder="0,00" step="0.01" min="0" oninput="calc()" /></div>
 <div><label>Imposto (%)</label><input type="number" id="imposto" value="8" step="0.5" min="0" max="50" oninput="calc()" /></div>
@@ -718,11 +726,42 @@ function mostrarStatusML(msg){
 }
 
 // ═══════════════════════════════════
+// INTEGRAÇÃO API TINY ERP (custo do produto)
+// ═══════════════════════════════════
+async function buscarCustoTiny(){
+  var skuEl=document.getElementById('tiny_sku');
+  var sku=(skuEl.value||'').trim();
+  var status=document.getElementById('tiny-status');
+  var btn=document.getElementById('btn-tiny');
+  if(!sku){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU/código do produto no Tiny.';skuEl.focus();return;}
+  status.style.color='#6b7280';status.textContent='⏳ Buscando no Tiny...';
+  btn.disabled=true;btn.style.opacity='.6';
+  try{
+    var res=await fetch(APPS_SCRIPT_URL+'?action=tiny_custo&sku='+encodeURIComponent(sku));
+    var text=await res.text();
+    var data;
+    try{data=JSON.parse(text);}catch(e){status.style.color='#ef4444';status.textContent='⛔ Resposta inválida do Apps Script. Verifique se a função tiny_custo foi adicionada.';btn.disabled=false;btn.style.opacity='1';return;}
+    if(data.erro){
+      status.style.color='#ef4444';status.textContent='⛔ '+data.erro;
+    } else {
+      document.getElementById('custo').value=data.custo.toFixed(2);
+      calc();
+      salvarUltimo();
+      status.style.color='#22c55e';
+      status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'');
+    }
+  }catch(e){
+    status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o Apps Script.';
+  }
+  btn.disabled=false;btn.style.opacity='1';
+}
+
+// ═══════════════════════════════════
 // SALVAMENTO NO NAVEGADOR (localStorage)
 // ═══════════════════════════════════
 var LS_ULTIMO='calc_ultimo_v1';
 var LS_PRODUTOS='calc_produtos_v1';
-var CAMPOS=['prod_nome','custo','imposto','margem','outros','preco_venda','peso_global','dim_c','dim_l','dim_a','ml-com-pct','promo_pct','cupom_pct','afiliado_pct','ads_gasto','ads_receita_ads','ads_receita_total'];
+var CAMPOS=['prod_nome','tiny_sku','custo','imposto','margem','outros','preco_venda','peso_global','dim_c','dim_l','dim_a','ml-com-pct','promo_pct','cupom_pct','afiliado_pct','ads_gasto','ads_receita_ads','ads_receita_total'];
 
 function lsGet(chave,padrao){
   try{var v=localStorage.getItem(chave);return v?JSON.parse(v):padrao;}catch(e){return padrao;}
