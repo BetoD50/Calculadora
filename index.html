@@ -755,10 +755,22 @@ async function buscarCustoTiny(){
       document.getElementById('custo').value=data.custo.toFixed(2);
       var nomeEl=document.getElementById('prod_nome');
       if(data.nome) nomeEl.value=data.nome;
+      var medidasTxt='';
+      if(data.peso>0){
+        document.getElementById('peso_global').value=data.peso;
+        medidasTxt+=' · peso: '+data.peso+'kg';
+      }
+      if(data.comprimento>0&&data.largura>0&&data.altura>0){
+        document.getElementById('dim_c').value=data.comprimento;
+        document.getElementById('dim_l').value=data.largura;
+        document.getElementById('dim_a').value=data.altura;
+        medidasTxt+=' · '+data.comprimento+'x'+data.largura+'x'+data.altura+'cm';
+      }
+      sincronizarPeso();
       calc();
       salvarUltimo();
       status.style.color='#22c55e';
-      status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'');
+      status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'')+medidasTxt;
     }
   }catch(e){
     status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o Apps Script.';
