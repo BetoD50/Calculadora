@@ -238,6 +238,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Preço com desconto</div><div style="font-size:24px;font-weight:900;color:#fff;" id="p-preco-desc">—</div></div>
 <div style="text-align:right;"><div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Desconto total aplicado</div><div style="font-size:16px;font-weight:700;color:#f87171;" id="p-desc-total">—</div></div>
 </div>
+<div style="font-size:11px;color:#6b7280;margin-top:8px;padding-top:8px;border-top:1px solid #1a1f2e;">⚠️ Frete e comissão são recalculados sobre o preço COM desconto (é assim que o marketplace cobra de verdade): Frete <strong id="p-frete-recalc" style="color:#e5e7eb;">—</strong> · Comissão <strong id="p-com-recalc" style="color:#e5e7eb;">—</strong></div>
 </div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
 <div class="metrica" id="pm-lucro"><div class="metrica-val" id="pv-lucro">—</div><div class="metrica-label">Lucro restante</div></div>
@@ -311,6 +312,7 @@ const SH_FRETE=[{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},{max:3,c
 const TIK_COM=[{max:50,pct:0.10,fixo:4},{max:Infinity,pct:0.06,fixo:6}];
 let plat='ml';
 let classicoBase=12, premiumBase=17;
+let ultimoPrecoCalc=0;
 
 function fmt(v){return 'R$ '+(v||0).toFixed(2).replace('.',',');}
 function pct(v){return (v||0).toFixed(1)+'%';}
@@ -363,20 +365,31 @@ function calcAcos(){
 }
 
 function calcPromo(){
-  const precoEl=document.getElementById('res-preco');
-  if(!precoEl) return;
-  const precoBase=parseFloat(precoEl.textContent.replace('R$ ','').replace(',','.'))||0;
+  const precoBase=ultimoPrecoCalc||0;
   if(precoBase<=0) return;
   const promoPct=parseFloat(document.getElementById('promo_pct').value)||0;
   const cupomPct=parseFloat(document.getElementById('cupom_pct').value)||0;
   const afiliadoPct=parseFloat(document.getElementById('afiliado_pct').value)||0;
   const descTotal=precoBase*(promoPct/100)+precoBase*(cupomPct/100);
   const precoDesc=precoBase-descTotal;
-  const lucroBaseEl=document.getElementById('v-lucro');
-  const lucroBase=lucroBaseEl?(parseFloat(lucroBaseEl.textContent.replace('R$ ','').replace(',','.'))||0):0;
+  // Frete e comissão do marketplace são cobrados sobre o preço REAL de venda
+  // (já com promoção/cupom aplicados), não sobre o preço cheio. Por isso
+  // recalculamos os dois em cima do precoDesc, e não só subtraímos o desconto
+  // do lucro que já tinha frete/comissão do preço cheio embutidos.
+  const custo=parseFloat(document.getElementById('custo').value)||0;
+  const outros=parseFloat(document.getElementById('outros').value)||0;
+  const impPct=parseFloat(document.getElementById('imposto').value)||0;
+  const custoBaseP=custo+outros;
+  const freteDesc=getFrete(precoDesc);
+  const comDesc=getComissao(precoDesc);
+  const impDesc=precoDesc*(impPct/100);
   const custoAfiliado=precoDesc*(afiliadoPct/100);
-  const lucroRestante=lucroBase-descTotal-custoAfiliado;
+  const lucroRestante=precoDesc-custoBaseP-freteDesc.f1-impDesc-comDesc.val-custoAfiliado;
   const margemRestante=precoDesc>0?(lucroRestante/precoDesc)*100:0;
+  const elFreteR=document.getElementById('p-frete-recalc');
+  const elComR=document.getElementById('p-com-recalc');
+  if(elFreteR) elFreteR.textContent=fmt(freteDesc.f1);
+  if(elComR) elComR.textContent=fmt(comDesc.val)+' ('+comDesc.label+')';
   const adsMaxR=Math.max(0,lucroRestante);
   const adsMaxPct=precoDesc>0?(adsMaxR/precoDesc)*100:0;
   const margemMinima=10;
@@ -509,6 +522,7 @@ function calc(){
   const frete=getFrete(preco);
   const com=getComissao(preco);
   const imp=preco*(impPct/100);
+  ultimoPrecoCalc=preco;
   rp.classList.add('visible');
   document.getElementById('card-promo').style.display='block';
   calcPromo();
