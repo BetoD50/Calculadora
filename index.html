@@ -104,6 +104,10 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <button onclick="buscarCustoTiny()" id="btn-tiny" style="padding:9px 16px;border-radius:7px;border:none;background:#60a5fa;color:#04101f;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">🔎 Buscar custo</button>
 </div>
 <div id="tiny-status" style="font-size:11px;margin-top:5px;min-height:14px;"></div>
+<div style="margin-top:8px;">
+<button onclick="buscarFreteRealML()" id="btn-frete-real" style="padding:8px 14px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;">🚚 Ver frete real cobrado pelo ML (por este SKU)</button>
+<div id="frete-real-status" style="font-size:11px;margin-top:5px;min-height:14px;"></div>
+</div>
 </div>
 <div class="prod-bar">
 <div><label>Nome do produto</label><input type="text" id="prod_nome" placeholder="ex: Desempenadeira dentada 20cm" /></div>
@@ -785,6 +789,40 @@ async function buscarCustoTiny(){
       salvarUltimo();
       status.style.color='#22c55e';
       status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'')+medidasTxt;
+    }
+  }catch(e){
+    status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o Apps Script.';
+  }
+  btn.disabled=false;btn.style.opacity='1';
+}
+
+// ═══════════════════════════════════
+// FRETE REAL — busca o custo de envio direto do anúncio no ML (não é tabela,
+// é o valor real que o próprio anúncio publicado está cobrando)
+// ═══════════════════════════════════
+async function buscarFreteRealML(){
+  var skuEl=document.getElementById('tiny_sku');
+  var sku=(skuEl.value||'').trim();
+  var status=document.getElementById('frete-real-status');
+  var btn=document.getElementById('btn-frete-real');
+  if(!sku){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU e clique em "Buscar custo" primeiro.';skuEl.focus();return;}
+  status.style.color='#6b7280';status.textContent='⏳ Buscando anúncio e frete real no Mercado Livre...';
+  btn.disabled=true;btn.style.opacity='.6';
+  try{
+    var res=await fetch(APPS_SCRIPT_URL+'?action=frete_real&sku='+encodeURIComponent(sku));
+    var text=await res.text();
+    var data;
+    try{data=JSON.parse(text);}catch(e){status.style.color='#ef4444';status.textContent='⛔ Resposta inválida do Apps Script. (Essa função ainda não foi adicionada — avise o Beto/ChatGPT-assistente para colar o código novo.)';btn.disabled=false;btn.style.opacity='1';return;}
+    if(data.erro){
+      status.style.color='#ef4444';status.textContent='⛔ '+data.erro;
+    } else {
+      var custo=(data.custo_frete!=null)?data.custo_frete:data.cost;
+      var txt='✅ '+(data.item_id||'anúncio encontrado')+(data.titulo?(' — '+data.titulo):'')+(data.preco!=null?(' — preço atual: R$ '+parseFloat(data.preco).toFixed(2).replace('.',',')):'');
+      if(custo!=null) txt+=' — <strong>frete real: R$ '+parseFloat(custo).toFixed(2).replace('.',',')+'</strong>';
+      else txt+=' — não veio um valor de frete pronto (veja o retorno completo no console).';
+      status.style.color='#22c55e';
+      status.innerHTML=txt;
+      console.log('frete_real bruto:',data);
     }
   }catch(e){
     status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o Apps Script.';
