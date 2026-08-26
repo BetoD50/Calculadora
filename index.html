@@ -180,6 +180,11 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <span class="pbadge destaque">⚖️ Cobrado: <strong id="b-cobrado">—</strong></span>
 </div>
 <div class="frete-alerta" id="frete-alerta"></div>
+<div style="margin-top:10px;">
+<label>Frete real (R$) <span style="color:#374151">editável — confira no seu painel do ML e cole aqui pra ficar exato</span></label>
+<input type="number" id="ml-frete-manual" placeholder="deixe vazio para usar a estimativa da tabela" step="0.01" min="0" oninput="calc()" />
+<div id="ml-frete-fonte" style="font-size:10px;color:#6b7280;margin-top:4px;"></div>
+</div>
 <p class="fonte-nota" style="margin-top:6px;">Tabela vigente 02/03/2026 — MercadoLíderes e reputação verde. <a href="https://www.mercadolivre.com.br/ajuda/custos-envio-reputacao-verde-sem-reputacao_48392" target="_blank">Fonte oficial ↗</a></p>
 </div>
 
@@ -487,7 +492,16 @@ function getFrete(preco){
     const cobrado=Math.max(pr,pc,0.001);
     const col=colPreco(preco);
     const colPago=Math.min(col,2);
-    return{f1:mlFrete(cobrado,col),f2:mlFrete(cobrado,colPago)};
+    const estimado=mlFrete(cobrado,col);
+    const manualEl=document.getElementById('ml-frete-manual');
+    const manualVal=manualEl?parseFloat(manualEl.value):NaN;
+    const fonteEl=document.getElementById('ml-frete-fonte');
+    if(manualVal>0){
+      if(fonteEl) fonteEl.innerHTML='🔧 usando o valor real que você digitou (estimativa da tabela seria '+fmt(estimado)+')';
+      return{f1:manualVal,f2:manualVal};
+    }
+    if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela — confira no ML de vez em quando';
+    return{f1:estimado,f2:mlFrete(cobrado,colPago)};
   }
   if(plat==='sh'){
     const p=parseFloat(document.getElementById('peso_global').value)||0;
@@ -843,7 +857,7 @@ async function buscarFreteRealML(){
 // ═══════════════════════════════════
 var LS_ULTIMO='calc_ultimo_v1';
 var LS_PRODUTOS='calc_produtos_v1';
-var CAMPOS=['prod_nome','tiny_sku','custo','imposto','margem','outros','preco_venda','peso_global','dim_c','dim_l','dim_a','ml-com-pct','promo_pct','cupom_pct','afiliado_pct','ads_gasto','ads_receita_ads','ads_receita_total'];
+var CAMPOS=['prod_nome','tiny_sku','custo','imposto','margem','outros','preco_venda','peso_global','dim_c','dim_l','dim_a','ml-com-pct','ml-frete-manual','promo_pct','cupom_pct','afiliado_pct','ads_gasto','ads_receita_ads','ads_receita_total'];
 
 function lsGet(chave,padrao){
   try{var v=localStorage.getItem(chave);return v?JSON.parse(v):padrao;}catch(e){return padrao;}
