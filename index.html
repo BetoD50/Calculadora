@@ -107,6 +107,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div style="margin-top:8px;">
 <button onclick="buscarFreteRealML()" id="btn-frete-real" style="padding:8px 14px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;">🚚 Ver frete real cobrado pelo ML (por este SKU)</button>
 <div id="frete-real-status" style="font-size:11px;margin-top:5px;min-height:14px;"></div>
+<pre id="frete-real-debug" style="display:none;font-size:10px;color:#6b7280;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;padding:8px;margin-top:6px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;"></pre>
 </div>
 </div>
 <div class="prod-bar">
@@ -813,13 +814,20 @@ async function buscarFreteRealML(){
     var text=await res.text();
     var data;
     try{data=JSON.parse(text);}catch(e){status.style.color='#ef4444';status.textContent='⛔ Resposta inválida do Apps Script. (Essa função ainda não foi adicionada — avise o Beto/ChatGPT-assistente para colar o código novo.)';btn.disabled=false;btn.style.opacity='1';return;}
+    var debugEl=document.getElementById('frete-real-debug');
     if(data.erro){
       status.style.color='#ef4444';status.textContent='⛔ '+data.erro;
+      if(debugEl){debugEl.style.display='none';debugEl.textContent='';}
     } else {
       var custo=(data.custo_frete!=null)?data.custo_frete:data.cost;
       var txt='✅ '+(data.item_id||'anúncio encontrado')+(data.titulo?(' — '+data.titulo):'')+(data.preco!=null?(' — preço atual: R$ '+parseFloat(data.preco).toFixed(2).replace('.',',')):'');
-      if(custo!=null) txt+=' — <strong>frete real: R$ '+parseFloat(custo).toFixed(2).replace('.',',')+'</strong>';
-      else txt+=' — não veio um valor de frete pronto (veja o retorno completo no console).';
+      if(custo!=null){
+        txt+=' — <strong>frete real: R$ '+parseFloat(custo).toFixed(2).replace('.',',')+'</strong>';
+        if(debugEl){debugEl.style.display='none';debugEl.textContent='';}
+      } else {
+        txt+=' — não veio um valor de frete pronto. Print da caixa cinza abaixo pra eu ajustar:';
+        if(debugEl){debugEl.style.display='block';debugEl.textContent=JSON.stringify(data.frete_bruto!==undefined?data.frete_bruto:data,null,2);}
+      }
       status.style.color='#22c55e';
       status.innerHTML=txt;
       console.log('frete_real bruto:',data);
