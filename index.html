@@ -235,6 +235,25 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div class="com-info" id="com-info-texto"></div>
 </div>
 
+<div class="card" id="card-comparativo-ml" style="margin-top:14px;display:none;">
+<div class="card-title ml">⚖️ Clássico vs Premium — lado a lado</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div id="comp-classico" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:13px;">
+<div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Clássico <span id="comp-c-pct">—</span></div>
+<div style="font-size:21px;font-weight:900;color:#fff;" id="comp-c-preco">—</div>
+<div style="font-size:11px;color:#9ca3af;margin-top:7px;line-height:1.5;" id="comp-c-detalhe">—</div>
+<div style="margin-top:8px;font-size:14px;" id="comp-c-lucro">—</div>
+</div>
+<div id="comp-premium" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:13px;">
+<div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Premium <span id="comp-p-pct">—</span></div>
+<div style="font-size:21px;font-weight:900;color:#fff;" id="comp-p-preco">—</div>
+<div style="font-size:11px;color:#9ca3af;margin-top:7px;line-height:1.5;" id="comp-p-detalhe">—</div>
+<div style="margin-top:8px;font-size:14px;" id="comp-p-lucro">—</div>
+</div>
+</div>
+<div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.5;" id="comp-obs"></div>
+</div>
+
 <div class="card" id="card-promo" style="display:none;">
 <div class="card-title" style="color:#a78bfa;">🎯 Promoção · Cupom · Afiliado · Ads</div>
 <div class="grid-3" style="margin-bottom:11px;">
@@ -528,7 +547,8 @@ function calc(){
   const met=document.getElementById('metricas');
   const cen=document.getElementById('cenarios');
   const ci=document.getElementById('card-com-info');
-  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';return;}
+  const compCard=document.getElementById('card-comparativo-ml');
+  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';if(compCard)compCard.style.display='none';return;}
   function calcPrecoSug(custoBase,mrg){
     let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100);
     for(let i=0;i<25;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(mrg/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
@@ -579,6 +599,60 @@ function calc(){
   }
   ci.style.display='block';
   document.getElementById('com-info-texto').innerHTML='Comissão aplicada: <strong>'+com.label+'</strong> = <strong>'+fmt(com.val)+'</strong> sobre R$ '+preco.toFixed(2).replace('.',',');
+
+  if(plat==='ml'){
+    atualizarComparativoML(custoBase,impPct,margDes);
+    if(compCard)compCard.style.display='block';
+  } else if(compCard){
+    compCard.style.display='none';
+  }
+}
+
+// Calcula o preço sugerido, frete, comissão e lucro usando uma % de comissão
+// FIXA (não lê o campo da tela) — serve pra comparar Clássico x Premium ao
+// mesmo tempo, sem depender de qual dos dois está "ativo" no momento.
+function calcPrecoComPct(custoBase,impPct,mrg,pctComissao){
+  let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100-pctComissao);
+  for(let i=0;i<25;i++){
+    const comVal=p*pctComissao;
+    const frete=getFrete(p);
+    const pNovo=custoBase+comVal+p*(impPct/100)+frete.f1+p*(mrg/100);
+    if(Math.abs(pNovo-p)<0.01)break;
+    p=pNovo;
+  }
+  const freteFinal=getFrete(p);
+  const comFinal=p*pctComissao;
+  const imp=p*(impPct/100);
+  const lucro=p-custoBase-freteFinal.f1-imp-comFinal;
+  return{preco:p,frete:freteFinal.f1,comissao:comFinal,imposto:imp,lucro:lucro,margem:p>0?(lucro/p)*100:0};
+}
+
+function atualizarComparativoML(custoBase,impPct,margDes){
+  const rC=calcPrecoComPct(custoBase,impPct,margDes,classicoBase/100);
+  const rP=calcPrecoComPct(custoBase,impPct,margDes,premiumBase/100);
+  document.getElementById('comp-c-pct').textContent=classicoBase+'%';
+  document.getElementById('comp-p-pct').textContent=premiumBase+'%';
+  document.getElementById('comp-c-preco').textContent=fmt(rC.preco);
+  document.getElementById('comp-p-preco').textContent=fmt(rP.preco);
+  document.getElementById('comp-c-detalhe').innerHTML='Frete: '+fmt(rC.frete)+' · Comissão: '+fmt(rC.comissao)+' · Imposto: '+fmt(rC.imposto);
+  document.getElementById('comp-p-detalhe').innerHTML='Frete: '+fmt(rP.frete)+' · Comissão: '+fmt(rP.comissao)+' · Imposto: '+fmt(rP.imposto);
+  document.getElementById('comp-c-lucro').innerHTML='Lucro: <strong style="color:#22c55e">'+fmt(rC.lucro)+'</strong> ('+rC.margem.toFixed(1)+'%)';
+  document.getElementById('comp-p-lucro').innerHTML='Lucro: <strong style="color:#22c55e">'+fmt(rP.lucro)+'</strong> ('+rP.margem.toFixed(1)+'%)';
+  const boxC=document.getElementById('comp-classico');
+  const boxP=document.getElementById('comp-premium');
+  const diff=rC.lucro-rP.lucro;
+  var obs='';
+  if(Math.abs(diff)<0.02){
+    boxC.style.borderColor='#2a2f3e';boxP.style.borderColor='#2a2f3e';
+    obs='Lucro por unidade fica praticamente igual nos dois.';
+  } else if(diff>0){
+    boxC.style.borderColor='#22c55e';boxP.style.borderColor='#2a2f3e';
+    obs='💡 Clássico dá <strong style="color:#22c55e">+'+fmt(diff)+'</strong> de lucro por unidade. Premium só compensa se trouxer vendas suficientes a mais pra cobrir essa diferença.';
+  } else {
+    boxP.style.borderColor='#22c55e';boxC.style.borderColor='#2a2f3e';
+    obs='💡 Premium dá <strong style="color:#22c55e">+'+fmt(-diff)+'</strong> de lucro por unidade nessa conta.';
+  }
+  document.getElementById('comp-obs').innerHTML=obs;
 }
 
 function fillCenario(id,preco,custo,outros,imp,frete,com){
