@@ -194,6 +194,32 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <p class="fonte-nota" style="margin-top:6px;">⚠️ Estimativa para Sudeste/Sul. Norte/Nordeste pode custar até 70% mais.</p>
 </div>
 
+<div class="card" id="card-comparativo-plats" style="display:none;border:1.5px solid #374151;">
+<div class="card-title neutro">🔀 Mercado Livre × Shopee × TikTok Shop — mesma margem, lado a lado</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="comp-plats-grid">
+<div id="compp-ml" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:12px;">
+<div style="font-size:10px;color:#FFE600;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🟡 Mercado Livre</div>
+<div style="font-size:19px;font-weight:900;color:#fff;" id="compp-ml-preco">—</div>
+<div style="font-size:10px;color:#9ca3af;margin-top:6px;line-height:1.5;" id="compp-ml-detalhe">—</div>
+<div style="margin-top:7px;font-size:13px;" id="compp-ml-lucro">—</div>
+</div>
+<div id="compp-sh" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:12px;">
+<div style="font-size:10px;color:#EE4D2D;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🟠 Shopee</div>
+<div style="font-size:19px;font-weight:900;color:#fff;" id="compp-sh-preco">—</div>
+<div style="font-size:10px;color:#9ca3af;margin-top:6px;line-height:1.5;" id="compp-sh-detalhe">—</div>
+<div style="margin-top:7px;font-size:13px;" id="compp-sh-lucro">—</div>
+</div>
+<div id="compp-tik" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:12px;">
+<div style="font-size:10px;color:#e5e7eb;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">⚫ TikTok Shop</div>
+<div style="font-size:19px;font-weight:900;color:#fff;" id="compp-tik-preco">—</div>
+<div style="font-size:10px;color:#9ca3af;margin-top:6px;line-height:1.5;" id="compp-tik-detalhe">—</div>
+<div style="margin-top:7px;font-size:13px;" id="compp-tik-lucro">—</div>
+</div>
+</div>
+<div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.5;" id="compp-obs"></div>
+<p class="fonte-nota" style="margin-top:8px;">Preço sugerido em cada plataforma pra bater a mesma margem que você pediu — mesmo peso e dimensões usados nos 3. Shopee precisa do peso preenchido pra calcular frete.</p>
+</div>
+
 <div class="resultado-principal" id="resultado-principal">
 <div class="res-label" id="res-label">💡 Preço sugerido — margem de 30%</div>
 <div class="res-preco" id="res-preco">—</div>
@@ -484,9 +510,10 @@ function calcFrete(){
   }
 }
 
-function getComissao(preco){
-  if(plat==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
-  if(plat==='sh'){
+function getComissao(preco,platOverride){
+  var plt=platOverride||plat;
+  if(plt==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
+  if(plt==='sh'){
     var camp=document.getElementById('sh_campanha');
     var extra=(camp&&camp.checked)?0.025:0;
     for(const f of SH_COM){
@@ -497,12 +524,13 @@ function getComissao(preco){
       }
     }
   }
-  if(plat==='tik'){for(const f of TIK_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
+  if(plt==='tik'){for(const f of TIK_COM){if(preco<=f.max)return{val:preco*f.pct+f.fixo,label:(f.pct*100).toFixed(0)+'% + R$'+f.fixo};}}
   return{val:0,label:'—'};
 }
 
-function getFrete(preco){
-  if(plat==='ml'){
+function getFrete(preco,platOverride){
+  var plt=platOverride||plat;
+  if(plt==='ml'){
     const pr=parseFloat(document.getElementById('peso_global').value)||0;
     const c=parseFloat(document.getElementById('dim_c').value)||0;
     const l=parseFloat(document.getElementById('dim_l').value)||0;
@@ -522,7 +550,7 @@ function getFrete(preco){
     if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela — confira no ML de vez em quando';
     return{f1:estimado,f2:mlFrete(cobrado,colPago)};
   }
-  if(plat==='sh'){
+  if(plt==='sh'){
     const p=parseFloat(document.getElementById('peso_global').value)||0;
     if(p<=0) return{f1:0,f2:0};
     let base=140;
@@ -533,7 +561,7 @@ function getFrete(preco){
     if(info) info.innerHTML='Frete real estimado: <strong>'+fmt(base)+'</strong> &nbsp;|&nbsp; Shopee cobre: <strong>'+fmt(subsidio)+'</strong> &nbsp;|&nbsp; <strong style="color:'+(seucusto===0?'#22c55e':'#f59e0b')+'">Você paga: '+fmt(seucusto)+(seucusto===0?' ✅ coberto':'')+'</strong>';
     return{f1:seucusto,f2:0};
   }
-  if(plat==='tik'){return{f1:preco*0.06,f2:0};}
+  if(plt==='tik'){return{f1:preco*0.06,f2:0};}
   return{f1:0,f2:0};
 }
 
@@ -548,7 +576,8 @@ function calc(){
   const cen=document.getElementById('cenarios');
   const ci=document.getElementById('card-com-info');
   const compCard=document.getElementById('card-comparativo-ml');
-  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';if(compCard)compCard.style.display='none';return;}
+  const compPlatsCard=document.getElementById('card-comparativo-plats');
+  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';if(compCard)compCard.style.display='none';if(compPlatsCard)compPlatsCard.style.display='none';return;}
   function calcPrecoSug(custoBase,mrg){
     let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100);
     for(let i=0;i<25;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(mrg/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
@@ -606,6 +635,57 @@ function calc(){
   } else if(compCard){
     compCard.style.display='none';
   }
+
+  atualizarComparativoPlataformas(custoBase,impPct,margDes);
+  if(compPlatsCard)compPlatsCard.style.display='block';
+}
+
+// Calcula preço sugerido/frete/comissão/lucro pra uma plataforma específica,
+// sem depender de qual aba está ativa na tela — usa os mesmos custo, peso e
+// dimensões preenchidos (são campos únicos, compartilhados pelas 3 abas).
+function calcPrecoPlataforma(custoBase,impPct,mrg,platName){
+  let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100);
+  for(let i=0;i<25;i++){
+    const com=getComissao(p,platName);
+    const frete=getFrete(p,platName);
+    const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(mrg/100);
+    if(Math.abs(pNovo-p)<0.01)break;
+    p=pNovo;
+  }
+  const freteFinal=getFrete(p,platName);
+  const comFinal=getComissao(p,platName);
+  const imp=p*(impPct/100);
+  const lucro=p-custoBase-freteFinal.f1-imp-comFinal.val;
+  return{preco:p,frete:freteFinal.f1,comissao:comFinal.val,comissaoLabel:comFinal.label,imposto:imp,lucro:lucro,margem:p>0?(lucro/p)*100:0};
+}
+
+function atualizarComparativoPlataformas(custoBase,impPct,margDes){
+  const peso=parseFloat(document.getElementById('peso_global').value)||0;
+  const rML=calcPrecoPlataforma(custoBase,impPct,margDes,'ml');
+  const rSH=calcPrecoPlataforma(custoBase,impPct,margDes,'sh');
+  const rTIK=calcPrecoPlataforma(custoBase,impPct,margDes,'tik');
+  const resultados=[{id:'ml',r:rML},{id:'sh',r:rSH},{id:'tik',r:rTIK}];
+
+  resultados.forEach(function(item){
+    document.getElementById('compp-'+item.id+'-preco').textContent=fmt(item.r.preco);
+    document.getElementById('compp-'+item.id+'-detalhe').innerHTML='Frete: '+fmt(item.r.frete)+' · Comissão: '+fmt(item.r.comissao)+' ('+item.r.comissaoLabel+')';
+    document.getElementById('compp-'+item.id+'-lucro').innerHTML='Lucro: <strong style="color:#22c55e">'+fmt(item.r.lucro)+'</strong> ('+item.r.margem.toFixed(1)+'%)';
+  });
+
+  // avisa se falta peso pra Shopee/ML calcularem o frete direito
+  var avisoPeso = peso<=0 ? ' ⚠️ Preencha o peso do produto pra frete de ML e Shopee entrarem na conta.' : '';
+
+  // destaca quem dá mais lucro por unidade (mesma margem % nos 3, então
+  // quem tem taxa mais baixa sempre "pede" um preço menor pro mesmo lucro %,
+  // e por isso costuma dar menos R$ de lucro bruto — mas o preço menor pode
+  // vender mais rápido. É só um retrato lado a lado, a decisão é sua.)
+  var melhor=resultados.reduce(function(a,b){return b.r.lucro>a.r.lucro?b:a;});
+  var nomes={ml:'Mercado Livre',sh:'Shopee',tik:'TikTok Shop'};
+  ['ml','sh','tik'].forEach(function(id){
+    var box=document.getElementById('compp-'+id);
+    box.style.borderColor = (id===melhor.id) ? '#22c55e' : '#2a2f3e';
+  });
+  document.getElementById('compp-obs').innerHTML='💡 Com a mesma margem de '+margDes+'%, quem dá mais lucro por unidade nessa conta é <strong style="color:#22c55e">'+nomes[melhor.id]+'</strong> (R$ '+fmt(melhor.r.lucro).replace('R$ ','')+').'+avisoPeso;
 }
 
 // Calcula o preço sugerido, frete, comissão e lucro usando uma % de comissão
