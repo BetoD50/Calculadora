@@ -166,7 +166,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <input type="checkbox" id="sh_campanha" onchange="calc()" style="width:auto;margin:0;cursor:pointer;" />
 <label for="sh_campanha" style="margin:0;font-size:12px;color:#e2e8f0;cursor:pointer;">Participando de campanha Shopee <span style="color:#f59e0b;font-weight:700;">+2,5%</span></label>
 </div>
-<div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$7,99:</strong> 50% &nbsp;|&nbsp; <strong>R$8–R$79,99:</strong> 20% + R$4 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16<br><strong>R$100–R$199,99:</strong> 14% + R$20 &nbsp;|&nbsp; <strong>R$200 ou mais:</strong> 14% + R$26<br><span style="color:#4b5563;font-size:11px;">Teto de R$100 na comissão foi removido em março/2026.</span></div>
+<div class="com-info">Comissão Shopee automática por faixa de preço:<br><strong>Até R$7,99:</strong> 50% &nbsp;|&nbsp; <strong>R$8–R$79,99:</strong> 20% + R$4,50 &nbsp;|&nbsp; <strong>R$80–R$99,99:</strong> 14% + R$16<br><strong>R$100–R$199,99:</strong> 14% + R$20 &nbsp;|&nbsp; <strong>R$200 ou mais:</strong> 14% + R$26<br><span style="color:#4b5563;font-size:11px;">Teto de R$100 na comissão foi removido em março/2026.</span></div>
 </div>
 <div id="com-tik" style="display:none;"><div class="com-info">Comissão TikTok Shop automática por faixa de preço:<br><strong>Até R$50:</strong> 10% + R$4 &nbsp;|&nbsp; <strong>Acima R$50:</strong> 6% + R$6<br>Taxa de Envio (frete): <strong>6% sobre o valor do pedido</strong></div></div>
 </div>
@@ -362,7 +362,7 @@ const ML_FRETE=[
 {max:Infinity,v:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95]}
 ];
 const ML_FAIXAS=[18.99,48.99,78.99,99.99,119.99,149.99,199.99,Infinity];
-const SH_COM=[{max:7.99,pct:0.50,fixo:0},{max:79.99,pct:0.20,fixo:4},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:Infinity,pct:0.14,fixo:26}];
+const SH_COM=[{max:7.99,pct:0.50,fixo:0},{max:79.99,pct:0.20,fixo:4.5},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:Infinity,pct:0.14,fixo:26}];
 const SH_FRETE=[{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},{max:3,c:35},{max:5,c:45},{max:7,c:55},{max:10,c:65},{max:15,c:80},{max:20,c:95},{max:30,c:115},{max:Infinity,c:140}];
 const TIK_COM=[{max:50,pct:0.10,fixo:4},{max:Infinity,pct:0.06,fixo:6}];
 let plat='ml';
