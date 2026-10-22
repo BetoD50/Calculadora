@@ -184,6 +184,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <label>Frete real (R$) <span style="color:#374151">editável — confira no seu painel do ML e cole aqui pra ficar exato</span></label>
 <input type="number" id="ml-frete-manual" placeholder="deixe vazio para usar a estimativa da tabela" step="0.01" min="0" oninput="calc()" />
 <div id="ml-frete-fonte" style="font-size:10px;color:#6b7280;margin-top:4px;"></div>
+<div id="ml-memoria" style="font-size:10px;color:#6b7280;margin-top:4px;"></div>
 </div>
 <p class="fonte-nota" style="margin-top:6px;">Tabela vigente 02/03/2026 — MercadoLíderes e reputação verde. <a href="https://www.mercadolivre.com.br/ajuda/custos-envio-reputacao-verde-sem-reputacao_48392" target="_blank">Fonte oficial ↗</a></p>
 </div>
@@ -489,6 +490,46 @@ function colPreco(preco){for(let i=0;i<ML_FAIXAS.length;i++)if(preco<=ML_FAIXAS[
 function mlFrete(kg,col){for(const f of ML_FRETE)if(kg<=f.max)return f.v[col];return ML_FRETE[ML_FRETE.length-1].v[col];}
 function cubado(c,l,a){return(c*l*a)/6000;}
 
+// ═══════════════════════════════════
+// MEMÓRIA DE FRETE REAL (aprendida das vendas das suas contas no ML)
+// ═══════════════════════════════════
+const SUPA_URL='https://xoqvlaeyckahydjljeqo.supabase.co';
+const SUPA_KEY='sb_publishable_Cblkf9NNPSfWokpOJ6UBIQ_SF717veR';
+const FRETE_MIN_VENDAS=3; // só confia na média com pelo menos 3 vendas com frete pago
+let freteMemoria=null;
+let avisoConexao='';
+
+function freteAprendido(cobrado,col){
+  if(!freteMemoria||!freteMemoria.celulas) return null;
+  let pi=ML_FRETE.findIndex(f=>cobrado<=f.max);
+  if(pi<0) pi=ML_FRETE.length-1;
+  const c=freteMemoria.celulas[col+'|'+pi];
+  if(!c||c.m==null) return null;
+  const nz=c.n-c.z;
+  if(nz<FRETE_MIN_VENDAS) return null;
+  return{m:Number(c.m),mn:Number(c.mn),mx:Number(c.mx),n:c.n,z:c.z,nz:nz};
+}
+
+async function carregarFreteAprendido(){
+  const el=document.getElementById('ml-memoria');
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/rpc/frete_tabela',{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body:'{}'
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d=await res.json();
+    if(!d||!d.celulas) throw new Error('resposta vazia');
+    freteMemoria=d;
+    if(el) el.innerHTML=avisoConexao+'🧠 Memória de frete: <strong>'+d.vendas+'</strong> vendas reais dos últimos 120 dias · atualiza sozinha a cada 3 horas';
+    calc();
+  }catch(e){
+    console.log('Memória de frete indisponível:',e);
+    if(el) el.innerHTML=avisoConexao+'🧠 Memória de frete indisponível agora — usando a tabela';
+  }
+}
+
 function calcFrete(){
   const pr=parseFloat(document.getElementById('peso_global').value)||0;
   const c=parseFloat(document.getElementById('dim_c').value)||0;
@@ -547,7 +588,18 @@ function getFrete(preco,platOverride){
       if(fonteEl) fonteEl.innerHTML='🔧 usando o valor real que você digitou (estimativa da tabela seria '+fmt(estimado)+')';
       return{f1:manualVal,f2:manualVal};
     }
-    if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela — confira no ML de vez em quando';
+    const ap=freteAprendido(cobrado,col);
+    if(ap){
+      const ap2=(col===colPago)?ap:freteAprendido(cobrado,colPago);
+      const f2=(col===colPago)?ap.m:(ap2?ap2.m:mlFrete(cobrado,colPago));
+      if(fonteEl){
+        let t='🧠 <strong style="color:#4ade80">frete real aprendido</strong>: média de '+ap.nz+' vendas suas nessa faixa (variou de '+fmt(ap.mn)+' a '+fmt(ap.mx)+') · tabela diria '+fmt(estimado);
+        if(ap.z>0) t+=' · '+Math.round(ap.z/ap.n*100)+'% das vendas saíram com frete R$ 0 pra você (não contei, pra margem não ficar otimista)';
+        fonteEl.innerHTML=t;
+      }
+      return{f1:ap.m,f2:f2};
+    }
+    if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela — ainda sem vendas suas suficientes nessa faixa de preço e peso';
     return{f1:estimado,f2:mlFrete(cobrado,colPago)};
   }
   if(plt==='sh'){
@@ -869,7 +921,12 @@ async function initML(){
   const params=new URLSearchParams(window.location.search);
   const code=params.get('code');
   const ml=params.get('ml');
-  if(code){window.history.replaceState({},document.title,window.location.pathname);await trocarCodePorToken(code);}
+  const msg=params.get('msg')||'';
+  if(ml==='erro') avisoConexao='<span style="color:#f87171">❌ Não consegui conectar a conta: '+msg.replace(/[<>&"]/g,'')+'</span><br>';
+  else if(ml==='ok'&&msg) avisoConexao='<span style="color:#4ade80">✅ '+msg.replace(/[<>&"]/g,'')+'</span><br>';
+  carregarFreteAprendido();
+  if(ml==='erro'){window.history.replaceState({},document.title,window.location.pathname);await obterTokenSalvo();}
+  else if(code){window.history.replaceState({},document.title,window.location.pathname);await trocarCodePorToken(code);}
   else if(ml==='ok'){window.history.replaceState({},document.title,window.location.pathname);await obterTokenSalvo();}
   else{await obterTokenSalvo();}
   carregarCategorias('');
@@ -899,12 +956,9 @@ async function obterTokenSalvo(){
 }
 
 async function carregarDadosML(){
-  if(!mlToken) return;
-  try{
-    const res=await fetch('https://api.mercadolibre.com/users/me',{headers:{'Authorization':'Bearer '+mlToken}});
-    const user=await res.json();
-    if(user.id) mostrarStatusML('✅ ML conectado: <strong style="color:#FFE600">'+user.nickname+'</strong>');
-  }catch(e){console.log('Erro ML:',e);}
+  // O navegador não pode chamar api.mercadolibre.com direto (bloqueio CORS),
+  // então não tentamos mais buscar o apelido aqui. O status "ML conectado" já basta.
+  return;
 }
 
 function mostrarStatusML(msg){
