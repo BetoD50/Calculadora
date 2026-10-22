@@ -311,6 +311,14 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 </div>
 <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.6;" id="ads-obs"></div>
 <div style="border-top:1px solid #1a1f2e;margin-top:14px;padding-top:14px;">
+<div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">🔗 Gasto real de Ads <span style="color:#4b5563;font-weight:400;text-transform:none;">(puxado do Mercado Livre, últimos 30 dias)</span></div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:8px;">
+<div style="font-size:11px;color:#6b7280;">Usa o campo <strong style="color:#e5e7eb">SKU</strong> lá em cima: pode ser o <strong style="color:#e5e7eb">SKU do Tiny</strong> ou o <strong style="color:#e5e7eb">código do anúncio (MLB...)</strong>.</div>
+<button type="button" id="btn-ads" onclick="buscarAdsReal()" style="padding:11px 14px;border-radius:8px;border:1px solid #a78bfa;background:#13102a;color:#c4b5fd;font-weight:700;cursor:pointer;font-size:12px;">Buscar gasto no ML</button>
+</div>
+<div id="ads-real-box" style="font-size:11px;color:#6b7280;line-height:1.6;"></div>
+</div>
+<div style="border-top:1px solid #1a1f2e;margin-top:14px;padding-top:14px;">
 <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📊 Calcular ACOS e TACOS Real <span style="color:#4b5563;font-weight:400;text-transform:none;">(do seu painel de ads)</span></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
 <div><label>Gasto em Ads (R$)</label><input type="number" id="ads_gasto" placeholder="0,00" step="0.01" min="0" oninput="calcAcos()" /></div>
@@ -469,7 +477,76 @@ function calcPromo(){
   else if(margemRestante<10) obs='⚠️ Margem muito apertada. Qualquer custo de ads vai gerar prejuízo.';
   else obs='✅ Pode gastar até <strong>'+fmt(adsMaxR)+'</strong> em ads por unidade sem prejuízo. TACOS máximo recomendado: <strong>'+adsSaudavelPct.toFixed(1)+'%</strong>.';
   document.getElementById('ads-obs').innerHTML=obs;
+  ultimoLucroPromo=lucroRestante;
+  ultimoPrecoDescCalc=precoDesc;
+  renderAdsReal();
   document.getElementById('promo-resultado').style.display='block';
+}
+
+// ═══════════════════════════════════
+// GASTO REAL DE ADS (vem do ML, atualizado sozinho a cada 3 horas)
+// ═══════════════════════════════════
+let adsReal=null, ultimoLucroPromo=null, ultimoPrecoDescCalc=0;
+function limparTxt(s){return String(s==null?'':s).replace(/[<>&"]/g,'');}
+
+async function buscarAdsReal(){
+  const box=document.getElementById('ads-real-box');
+  let cod=(document.getElementById('tiny_sku').value||'').trim();
+  if(/^mlb-?\d+$/i.test(cod)) cod=cod.replace('-','').toUpperCase();
+  if(!cod){box.innerHTML='⚠️ Digite o SKU ou o código do anúncio (MLB...) no campo SKU lá em cima.';return;}
+  box.innerHTML='⏳ Buscando no Mercado Livre...';
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/rpc/ads_item',{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_codigo:cod})
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d=await res.json();
+    if(!d){
+      adsReal=null;
+      box.innerHTML='ℹ️ Sem gasto com Ads nos últimos 30 dias para <strong>'+limparTxt(cod)+'</strong> — o produto não está em campanha, ou o código/SKU não bate com o do ML.';
+      return;
+    }
+    adsReal=d;
+    document.getElementById('ads_gasto').value=Number(d.gasto).toFixed(2);
+    document.getElementById('ads_receita_ads').value=Number(d.vendas_valor).toFixed(2);
+    calcAcos();
+    renderAdsReal();
+    if(typeof salvarUltimo==='function') salvarUltimo();
+  }catch(e){
+    console.log('Erro ao buscar ads:',e);
+    box.innerHTML='⚠️ Não consegui buscar o gasto agora. Tente de novo em instantes.';
+  }
+}
+
+function renderAdsReal(){
+  const box=document.getElementById('ads-real-box');
+  if(!box||!adsReal) return;
+  const d=adsReal;
+  const gasto=Number(d.gasto), un=Number(d.unidades), vend=Number(d.vendas_valor);
+  const acos=vend>0?(gasto/vend)*100:0;
+  const origem=d.por==='anuncio'?'código do anúncio':(d.anuncios>1?d.anuncios+' anúncios com esse SKU somados':'SKU');
+  let t='📢 <strong style="color:#e5e7eb">'+limparTxt(d.titulo).slice(0,70)+'</strong> <span style="color:#4b5563">('+origem+', '+d.de+' a '+d.ate+')</span><br>';
+  t+='Gastou <strong style="color:#e5e7eb">'+fmt(gasto)+'</strong> · '+Number(d.cliques||0)+' cliques · '+un+' vendas pelos Ads ('+fmt(vend)+')';
+  if(vend>0) t+=' · ACOS '+acos.toFixed(1)+'%';
+  t+='<br>';
+  if(ultimoLucroPromo===null||ultimoPrecoDescCalc<=0){
+    t+='<span style="color:#4b5563">Preencha custo e preço para ver a margem depois do ads.</span>';
+  }else if(un<=0){
+    t+='<span style="color:#f87171">⛔ Gastou '+fmt(gasto)+' em ads e não vendeu nenhuma unidade por ele nesse período.</span>';
+  }else{
+    const adsPorVenda=gasto/un;
+    const lucroDepois=ultimoLucroPromo-adsPorVenda;
+    const margDepois=(lucroDepois/ultimoPrecoDescCalc)*100;
+    const cor=lucroDepois<0?'#ef4444':margDepois>=10?'#22c55e':'#f59e0b';
+    t+='Ads por venda: <strong style="color:#e5e7eb">'+fmt(adsPorVenda)+'</strong><br>';
+    t+='<div style="margin-top:6px;background:#0b0e14;border:1.5px solid '+cor+';border-radius:8px;padding:10px;text-align:center;">';
+    t+='<div style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;letter-spacing:.07em">💰 Margem depois do ads</div>';
+    t+='<div style="font-size:22px;font-weight:800;color:'+cor+'">'+fmt(lucroDepois)+' <span style="font-size:14px">('+margDepois.toFixed(1)+'%)</span></div>';
+    t+='<div style="font-size:10px;color:#4b5563">lucro '+fmt(ultimoLucroPromo)+' por unidade − '+fmt(adsPorVenda)+' de ads por venda</div></div>';
+  }
+  box.innerHTML=t;
 }
 
 function setPlat(p){
@@ -983,6 +1060,12 @@ async function buscarCustoTiny(){
   var status=document.getElementById('tiny-status');
   var btn=document.getElementById('btn-tiny');
   if(!sku){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU/código do produto no Tiny.';skuEl.focus();return;}
+  if(/^mlb-?\d+$/i.test(sku)){
+    // código de anúncio do ML: o Tiny não busca por isso, então busca o gasto de Ads direto
+    status.style.color='#6b7280';status.textContent='ℹ️ Código de anúncio do ML: o Tiny busca só por SKU. Busquei o gasto de Ads (veja no bloco de Ads, mais abaixo).';
+    buscarAdsReal();
+    return;
+  }
   status.style.color='#6b7280';status.textContent='⏳ Buscando no Tiny...';
   btn.disabled=true;btn.style.opacity='.6';
   try{
@@ -1010,6 +1093,7 @@ async function buscarCustoTiny(){
       sincronizarPeso();
       calc();
       salvarUltimo();
+      buscarAdsReal();
       status.style.color='#22c55e';
       status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'')+medidasTxt;
     }
