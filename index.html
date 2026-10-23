@@ -497,13 +497,22 @@ async function buscarAdsReal(){
   if(!cod){box.innerHTML='⚠️ Digite o SKU ou o código do anúncio (MLB...) no campo SKU lá em cima.';return;}
   box.innerHTML='⏳ Buscando no Mercado Livre...';
   try{
-    const res=await fetch(SUPA_URL+'/rest/v1/rpc/ads_item',{
-      method:'POST',
-      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({p_codigo:cod})
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const d=await res.json();
+    let d=null;
+    for(let t=0;t<3;t++){
+      const res=await fetch(SUPA_URL+'/rest/v1/rpc/ads_item_pin',{
+        method:'POST',
+        headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({p_codigo:cod,p_pin:getPin()})
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      d=await res.json();
+      if(d&&d.erro==='pin_invalido'){
+        if(!pedirPin(getPin()!=='')){box.innerHTML='🔒 Precisa do PIN para ver o gasto de Ads.';return;}
+        continue;
+      }
+      if(d&&d.erro==='bloqueado'){box.innerHTML='🔒 Muitas tentativas com PIN errado. Aguarde 10 minutos e tente de novo.';return;}
+      break;
+    }
     if(!d){
       adsReal=null;
       renderAdsReal();
@@ -598,6 +607,34 @@ const SUPA_KEY='sb_publishable_Cblkf9NNPSfWokpOJ6UBIQ_SF717veR';
 const FRETE_MIN_VENDAS=3; // só confia na média com pelo menos 3 vendas com frete pago
 let freteMemoria=null;
 let avisoConexao='';
+
+// ═══════════════════════════════════
+// PIN de acesso: protege custo do Tiny, frete, categorias e gasto de Ads.
+// O PIN fica salvo só neste navegador; se o servidor recusar, a calculadora pede de novo.
+// ═══════════════════════════════════
+function getPin(){try{return localStorage.getItem('calc_pin')||'';}catch(e){return '';}}
+function setPin(p){try{localStorage.setItem('calc_pin',p);}catch(e){}}
+function pedirPin(errado){
+  const p=window.prompt((errado?'PIN incorreto. ':'')+'Digite o PIN da calculadora:');
+  if(p===null) return false;
+  setPin(String(p).trim());
+  return true;
+}
+const _fetchOriginal=window.fetch.bind(window);
+window.fetch=async function(url,opts){
+  const u=(typeof url==='string')?url:'';
+  if(u.startsWith(APPS_SCRIPT_URL)&&u.indexOf('action=')>-1&&u.indexOf('action=token')===-1){
+    let resp;
+    for(let t=0;t<3;t++){
+      resp=await _fetchOriginal(u+'&pin='+encodeURIComponent(getPin()),opts);
+      const txt=await resp.clone().text();
+      if(txt.indexOf('pin_invalido')===-1) return resp;
+      if(!pedirPin(getPin()!=='')) return resp;
+    }
+    return resp;
+  }
+  return _fetchOriginal(url,opts);
+};
 
 function freteAprendido(cobrado,col){
   if(!freteMemoria||!freteMemoria.celulas) return null;
