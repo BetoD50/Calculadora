@@ -1039,7 +1039,7 @@ async function trocarCodePorToken(code){
     const text=await res.text();
     let data;
     try{data=JSON.parse(text);}catch(e){mostrarStatusML('❌ Resposta inválida. <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');return;}
-    if(data.access_token){mlToken=data.access_token;mostrarStatusML('✅ ML conectado');await carregarDadosML();}
+    if(data.access_token||data.conectado){mlToken=data.access_token||'conectado';mostrarStatusML('✅ ML conectado');await carregarDadosML();}
     else{mostrarStatusML('❌ '+(data.error||JSON.stringify(data)).substring(0,100)+' <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');}
   }catch(e){mostrarStatusML('❌ Falha: '+e.message+' <a href="'+ML_AUTH_URL+'" style="color:#FFE600">Tentar novamente</a>');}
 }
@@ -1050,7 +1050,7 @@ async function obterTokenSalvo(){
     const text=await res.text();
     let data;
     try{data=JSON.parse(text);}catch(e){mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Clique aqui para conectar ao Mercado Livre</a>');return;}
-    if(data.access_token){mlToken=data.access_token;mostrarStatusML('✅ ML conectado');await carregarDadosML();}
+    if(data.access_token||data.conectado){mlToken=data.access_token||'conectado';mostrarStatusML('✅ ML conectado');await carregarDadosML();}
     else{mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Clique aqui para conectar ao Mercado Livre</a>');}
   }catch(e){mostrarStatusML('🔑 <a href="'+ML_AUTH_URL+'" style="color:#FFE600;font-weight:700;">Conectar ao Mercado Livre</a>');}
 }
