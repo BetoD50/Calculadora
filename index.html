@@ -513,6 +513,8 @@ async function buscarAdsReal(){
     adsReal=d;
     document.getElementById('ads_gasto').value=Number(d.gasto).toFixed(2);
     document.getElementById('ads_receita_ads').value=Number(d.vendas_valor).toFixed(2);
+    if(d.receita_total!=null&&Number(d.receita_total)>0) document.getElementById('ads_receita_total').value=Number(d.receita_total).toFixed(2);
+    else document.getElementById('ads_receita_total').value='';
     calcAcos();
     renderAdsReal();
     if(typeof salvarUltimo==='function') salvarUltimo();
@@ -535,10 +537,13 @@ function renderAdsReal(){
   t+='Gastou <strong style="color:#e5e7eb">'+fmt(gasto)+'</strong> · '+Number(d.cliques||0)+' cliques · '+un+' vendas pelos Ads ('+fmt(vend)+')';
   if(vend>0) t+=' · ACOS '+acos.toFixed(1)+'%';
   t+='<br>';
+  const rt=(d.receita_total!=null)?Number(d.receita_total):0, unT=Number(d.unidades_total||0);
+  const tacos=rt>0?(gasto/rt)*100:0;
+  if(rt>0) t+='Receita total (orgânico + Ads): <strong style="color:#e5e7eb">'+fmt(rt)+'</strong> ('+unT+' unidades) · TACOS <strong style="color:#e5e7eb">'+tacos.toFixed(1)+'%</strong><br>';
   // resumo no topo, logo abaixo do campo SKU (para não precisar descer a página)
   if(topo){
     let r='📢 <strong style="color:#e5e7eb">'+limparTxt(d.titulo).slice(0,80)+'</strong>';
-    r+=' · Ads: '+fmt(gasto)+' gastos, '+un+' vendas'+(vend>0?', ACOS '+acos.toFixed(1)+'%':'');
+    r+=' · Ads: '+fmt(gasto)+' gastos, '+un+' vendas'+(vend>0?', ACOS '+acos.toFixed(1)+'%':'')+(rt>0?', TACOS '+tacos.toFixed(1)+'%':'');
     if(ultimoLucroPromo!==null&&ultimoPrecoDescCalc>0&&un>0){
       const ld=ultimoLucroPromo-gasto/un, md=(ld/ultimoPrecoDescCalc)*100;
       r+=' · margem depois do ads: <strong style="color:'+(ld<0?'#ef4444':md>=10?'#22c55e':'#f59e0b')+'">'+md.toFixed(1)+'%</strong>';
@@ -559,6 +564,10 @@ function renderAdsReal(){
     t+='<div style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;letter-spacing:.07em">💰 Margem depois do ads</div>';
     t+='<div style="font-size:22px;font-weight:800;color:'+cor+'">'+fmt(lucroDepois)+' <span style="font-size:14px">('+margDepois.toFixed(1)+'%)</span></div>';
     t+='<div style="font-size:10px;color:#4b5563">lucro '+fmt(ultimoLucroPromo)+' por unidade − '+fmt(adsPorVenda)+' de ads por venda</div></div>';
+    if(unT>=un&&unT>0){
+      const adsMedio=gasto/unT, ldM=ultimoLucroPromo-adsMedio, mdM=(ldM/ultimoPrecoDescCalc)*100;
+      t+='<div style="margin-top:6px;font-size:11px;color:#6b7280;text-align:center;">Considerando todas as vendas do anúncio (orgânico + Ads): ads por unidade <strong style="color:#e5e7eb">'+fmt(adsMedio)+'</strong> → margem média <strong style="color:#e5e7eb">'+fmt(ldM)+' ('+mdM.toFixed(1)+'%)</strong></div>';
+    }
   }
   box.innerHTML=t;
 }
