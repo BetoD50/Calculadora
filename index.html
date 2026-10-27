@@ -77,6 +77,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 .prod-bar { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
 @media(max-width:600px){ .prod-bar { grid-template-columns: 1fr 1fr; } .prod-bar > div:first-child { grid-column: 1 / -1; } }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -98,12 +99,23 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div class="card">
 <div class="card-title neutro">📁 Meus Produtos <span style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0;">— salvos neste navegador</span></div>
 <div style="margin-bottom:11px;">
-<label>🔗 SKU no Tiny ERP <span style="color:#374151">busca custo e nome automaticamente</span></label>
+<label>🔗 SKU do produto <span style="color:#374151">busca custo, peso e medidas automaticamente (também aceita código MLB)</span></label>
 <div style="display:flex;gap:8px;">
 <input type="text" id="tiny_sku" placeholder="ex: FER-001" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCustoTiny();}" />
 <button onclick="buscarCustoTiny()" id="btn-tiny" style="padding:9px 16px;border-radius:7px;border:none;background:#60a5fa;color:#04101f;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">🔎 Buscar custo</button>
 </div>
 <div id="tiny-status" style="font-size:11px;margin-top:5px;min-height:14px;"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+<button onclick="salvarProdutoBanco()" id="btn-salvar-prod" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">💾 Salvar no cadastro de produtos</button>
+<button onclick="document.getElementById('imp-box').style.display=(document.getElementById('imp-box').style.display==='none'?'block':'none')" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">📥 Atualizar produtos (arquivos do UpSeller)</button>
+</div>
+<div id="imp-box" style="display:none;margin-top:8px;padding:10px;border:1px dashed #374151;border-radius:8px;font-size:11px;color:#9ca3af;line-height:1.6;">
+Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
+<label style="display:block;margin-top:4px;">Produtos (Export_Warehouse_Products…xlsx): <input type="file" id="imp-prod" accept=".xlsx,.xls,.csv" /></label>
+<label style="display:block;margin-top:4px;">Kits (Export_Kit…xlsx): <input type="file" id="imp-kit" accept=".xlsx,.xls,.csv" /></label>
+<button onclick="importarProdutos()" id="btn-imp" style="margin-top:8px;padding:7px 14px;border-radius:7px;border:none;background:#60a5fa;color:#04101f;font-size:12px;font-weight:700;cursor:pointer;">Enviar e atualizar</button>
+<div id="imp-status" style="margin-top:6px;min-height:14px;"></div>
+</div>
 <div id="ads-topo" style="font-size:11px;margin-top:4px;color:#6b7280;line-height:1.5;"></div>
 <div style="margin-top:8px;">
 <button onclick="buscarFreteRealML()" id="btn-frete-real" style="padding:8px 14px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;">🚚 Ver frete real cobrado pelo ML (por este SKU)</button>
@@ -314,7 +326,7 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 <div style="border-top:1px solid #1a1f2e;margin-top:14px;padding-top:14px;">
 <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">🔗 Gasto real de Ads <span style="color:#4b5563;font-weight:400;text-transform:none;">(puxado do Mercado Livre, últimos 30 dias)</span></div>
 <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:8px;">
-<div style="font-size:11px;color:#6b7280;">Usa o campo <strong style="color:#e5e7eb">SKU</strong> lá em cima: pode ser o <strong style="color:#e5e7eb">SKU do Tiny</strong> ou o <strong style="color:#e5e7eb">código do anúncio (MLB...)</strong>.</div>
+<div style="font-size:11px;color:#6b7280;">Usa o campo <strong style="color:#e5e7eb">SKU</strong> lá em cima: pode ser o <strong style="color:#e5e7eb">SKU do produto</strong> ou o <strong style="color:#e5e7eb">código do anúncio (MLB...)</strong>.</div>
 <button type="button" id="btn-ads" onclick="buscarAdsReal()" style="padding:11px 14px;border-radius:8px;border:1px solid #a78bfa;background:#13102a;color:#c4b5fd;font-weight:700;cursor:pointer;font-size:12px;">Buscar gasto no ML</button>
 </div>
 <div id="ads-real-box" style="font-size:11px;color:#6b7280;line-height:1.6;"></div>
@@ -1119,22 +1131,29 @@ async function buscarCustoTiny(){
   var sku=(skuEl.value||'').trim();
   var status=document.getElementById('tiny-status');
   var btn=document.getElementById('btn-tiny');
-  if(!sku){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU/código do produto no Tiny.';skuEl.focus();return;}
+  if(!sku){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU do produto.';skuEl.focus();return;}
   if(/^mlb-?\d+$/i.test(sku)){
-    // código de anúncio do ML: o Tiny não busca por isso, então busca o gasto de Ads direto
-    status.style.color='#6b7280';status.textContent='ℹ️ Código de anúncio do ML: o Tiny busca só por SKU. Busquei o gasto de Ads (veja no bloco de Ads, mais abaixo).';
+    // código de anúncio do ML: não há custo por MLB, então busca o gasto de Ads direto
+    status.style.color='#6b7280';status.textContent='ℹ️ Código de anúncio do ML: o custo busca só por SKU. Busquei o gasto de Ads (veja no bloco de Ads, mais abaixo).';
     buscarAdsReal();
     return;
   }
-  status.style.color='#6b7280';status.textContent='⏳ Buscando no Tiny...';
+  status.style.color='#6b7280';status.textContent='⏳ Buscando produto...';
   btn.disabled=true;btn.style.opacity='.6';
   try{
-    var res=await fetch(APPS_SCRIPT_URL+'?action=tiny_custo&sku='+encodeURIComponent(sku));
-    var text=await res.text();
-    var data;
-    try{data=JSON.parse(text);}catch(e){status.style.color='#ef4444';status.textContent='⛔ Resposta inválida do Apps Script. Verifique se a função tiny_custo foi adicionada.';btn.disabled=false;btn.style.opacity='1';return;}
-    if(data.erro){
+    var data=await supaRpc('produto_pin',{p_sku:sku});
+    if(data.erro==='nao_encontrado'){
+      status.style.color='#f59e0b';status.textContent='⚠️ SKU "'+sku+'" não está na lista de produtos. Digite o custo (e peso/medidas se tiver) e clique em "💾 Salvar no cadastro de produtos". Da próxima vez ele aparece sozinho.';
+      document.getElementById('custo').focus();
+    } else if(data.erro==='pin_invalido'){
+      status.style.color='#ef4444';status.textContent='🔒 Precisa do PIN para buscar o produto.';
+    } else if(data.erro==='bloqueado'){
+      status.style.color='#ef4444';status.textContent='🔒 Muitas tentativas de PIN. Aguarde 10 minutos.';
+    } else if(data.erro){
       status.style.color='#ef4444';status.textContent='⛔ '+data.erro;
+    } else if(!(data.custo>0)){
+      status.style.color='#f59e0b';status.textContent='⚠️ "'+(data.nome||sku)+'" está na lista, mas sem custo. Digite o custo e clique em "💾 Salvar no cadastro de produtos".';
+      if(data.nome) document.getElementById('prod_nome').value=data.nome;
     } else {
       document.getElementById('custo').value=data.custo.toFixed(2);
       var nomeEl=document.getElementById('prod_nome');
@@ -1155,12 +1174,86 @@ async function buscarCustoTiny(){
       salvarUltimo();
       buscarAdsReal();
       status.style.color='#22c55e';
-      status.textContent='✅ '+data.nome+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+(data.custo_medio?(' · médio: R$ '+data.custo_medio.toFixed(2).replace('.',',')):'')+medidasTxt;
+      status.textContent='✅ '+(data.nome||sku)+(data.tipo==='kit'?' (kit)':'')+' — custo: R$ '+data.custo.toFixed(2).replace('.',',')+medidasTxt+(data.dim_estimada?' · medida do kit estimada (confira)':'');
     }
   }catch(e){
-    status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o Apps Script.';
+    status.style.color='#ef4444';status.textContent='⛔ Falha de conexão com o banco de produtos.';
   }
   btn.disabled=false;btn.style.opacity='1';
+}
+
+// chama uma função do Supabase com PIN (pede o PIN se faltar ou estiver errado)
+async function supaRpc(fn,args){
+  var r;
+  for(var t=0;t<3;t++){
+    var corpo=Object.assign({},args,{p_pin:getPin()});
+    var resp=await fetch(SUPA_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify(corpo)});
+    r=await resp.json();
+    if(r&&r.erro==='pin_invalido'){ if(!pedirPin(getPin()!=='')) return r; continue; }
+    return r;
+  }
+  return r;
+}
+
+async function salvarProdutoBanco(){
+  var status=document.getElementById('tiny-status');
+  var sku=(document.getElementById('tiny_sku').value||'').trim();
+  if(!sku||/^mlb-?\d+$/i.test(sku)){status.style.color='#f59e0b';status.textContent='⚠️ Digite o SKU do produto (não o código MLB) para salvar.';return;}
+  var custo=parseFloat(String(document.getElementById('custo').value).replace(',','.'))||0;
+  if(!(custo>0)){status.style.color='#f59e0b';status.textContent='⚠️ Preencha o custo antes de salvar.';return;}
+  var pesoKg=parseFloat(String(document.getElementById('peso_global').value).replace(',','.'))||0;
+  var n=function(id){return parseFloat(String(document.getElementById(id).value).replace(',','.'))||0;};
+  status.style.color='#6b7280';status.textContent='⏳ Salvando produto...';
+  try{
+    var r=await supaRpc('produto_salvar',{p_sku:sku,p_titulo:document.getElementById('prod_nome').value||'',p_custo:custo,p_peso_g:Math.round(pesoKg*1000),p_c:n('dim_c'),p_l:n('dim_l'),p_a:n('dim_a')});
+    if(r&&r.ok){status.style.color='#22c55e';status.textContent='✅ Produto "'+sku+'" salvo. Da próxima vez é só buscar o SKU.';}
+    else if(r&&r.erro==='pin_invalido'){status.style.color='#ef4444';status.textContent='🔒 Precisa do PIN para salvar.';}
+    else {status.style.color='#ef4444';status.textContent='⛔ Não consegui salvar: '+((r&&r.erro)||'erro');}
+  }catch(e){status.style.color='#ef4444';status.textContent='⛔ Falha de conexão ao salvar.';}
+}
+
+function lerPlanilha(arquivo){
+  return new Promise(function(ok,err){
+    var fr=new FileReader();
+    fr.onload=function(){try{var wb=XLSX.read(fr.result,{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];ok(XLSX.utils.sheet_to_json(ws,{defval:''}));}catch(e){err(e);}};
+    fr.onerror=function(){err(fr.error);};
+    fr.readAsArrayBuffer(arquivo);
+  });
+}
+function numPos(v){var x=parseFloat(String(v).replace(',','.'));return (isFinite(x)&&x>0)?x:null;}
+
+async function importarProdutos(){
+  var st=document.getElementById('imp-status'),btn=document.getElementById('btn-imp');
+  var fp=document.getElementById('imp-prod').files[0],fk=document.getElementById('imp-kit').files[0];
+  if(!fp&&!fk){st.style.color='#f59e0b';st.textContent='⚠️ Escolha pelo menos um arquivo.';return;}
+  if(typeof XLSX==='undefined'){st.style.color='#ef4444';st.textContent='⛔ Leitor de Excel não carregou. Confira a internet e recarregue a página.';return;}
+  btn.disabled=true;st.style.color='#6b7280';st.textContent='⏳ Lendo arquivos...';
+  try{
+    var prods=[],kits=[];
+    if(fp){
+      var L=await lerPlanilha(fp);
+      if(L.length&&!('SKU' in L[0])&&!('Custo de Compra' in L[0])) throw new Error('O arquivo de produtos precisa ter as colunas SKU e Custo de Compra.');
+      L.forEach(function(r){var sku=String(r['SKU']||'').trim(); if(!sku) return;
+        var o={sku:sku,titulo:String(r['Título']||'').trim().slice(0,120)};
+        var c=numPos(r['Custo de Compra']),p=numPos(r['Peso (g)']),a=numPos(r['Comprimento (cm)']),l=numPos(r['Largura (cm)']),h=numPos(r['Altura (cm)']);
+        if(c)o.custo=c; if(p)o.peso_g=p; if(a)o.c=a; if(l)o.l=l; if(h)o.a=h; prods.push(o);});
+    }
+    if(fk){
+      var K=await lerPlanilha(fk);
+      if(K.length&&!('KIT SKU' in K[0])) throw new Error('O arquivo de kits precisa ter a coluna KIT SKU.');
+      var vistos={};
+      K.forEach(function(r){var kit=String(r['KIT SKU']||'').trim(),sku=String(r['SKU de Produto']||'').trim(); if(!kit||!sku) return;
+        var o={kit:kit,sku:sku,qtd:numPos(r['Qtd. SKU de Produto'])||1};
+        if(!vistos[kit]){o.titulo=String(r['Título']||'').trim().slice(0,120);vistos[kit]=1;} kits.push(o);});
+    }
+    st.textContent='⏳ Enviando '+prods.length+' produtos e '+Object.keys(kits.reduce(function(m,k){m[k.kit]=1;return m;},{})).length+' kits...';
+    var r=await supaRpc('produtos_importar',{p_produtos:prods,p_kits:kits});
+    if(r&&!r.erro){st.style.color='#22c55e';st.textContent='✅ Pronto: '+r.produtos+' produtos e '+r.kits+' kits atualizados. Custo em branco no arquivo não apaga o que já estava salvo.';}
+    else if(r&&r.erro==='pin_invalido'){st.style.color='#ef4444';st.textContent='🔒 Precisa do PIN.';}
+    else if(r&&r.erro==='bloqueado'){st.style.color='#ef4444';st.textContent='🔒 Muitas tentativas de PIN. Aguarde 10 minutos.';}
+    else {st.style.color='#ef4444';st.textContent='⛔ Erro ao enviar: '+((r&&(r.erro||r.message))||'desconhecido');}
+  }catch(e){st.style.color='#ef4444';st.textContent='⛔ '+(e.message||'Falha ao ler o arquivo.');}
+  btn.disabled=false;
 }
 
 // ═══════════════════════════════════
