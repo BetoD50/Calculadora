@@ -383,6 +383,10 @@ const ML_FRETE=[
 {max:150,v:[8.65,12.75,14.15,126.55,146.15,165.65,184.65,199.45]},
 {max:Infinity,v:[8.75,12.75,14.35,166.15,192.45,217.55,242.55,261.95]}
 ];
+// O ML subiu o frete no fim de ago/2026. Para faixas leves (até 3 kg) sem vendas suas suficientes, soma a alta média observada por faixa de preço.
+const ML_AJUSTE=[0,0.30,0.45,0.60,0.70,0.60,0.65,0.80];
+const ML_AJUSTE_ATE_KG=3;
+ML_FRETE.forEach(function(f){ if(f.max<=ML_AJUSTE_ATE_KG) f.v=f.v.map(function(x,c){return Math.round((x+ML_AJUSTE[c])*100)/100;}); });
 const ML_FAIXAS=[18.99,48.99,78.99,99.99,119.99,149.99,199.99,Infinity];
 const SH_COM=[{max:7.99,pct:0.50,fixo:0},{max:79.99,pct:0.20,fixo:4.5},{max:99.99,pct:0.14,fixo:16},{max:199.99,pct:0.14,fixo:20},{max:Infinity,pct:0.14,fixo:26}];
 const SH_FRETE=[{max:0.3,c:14},{max:0.5,c:17},{max:1,c:22},{max:2,c:28},{max:3,c:35},{max:5,c:45},{max:7,c:55},{max:10,c:65},{max:15,c:80},{max:20,c:95},{max:30,c:115},{max:Infinity,c:140}];
@@ -671,7 +675,7 @@ async function carregarFreteAprendido(){
     const d=await res.json();
     if(!d||!d.celulas) throw new Error('resposta vazia');
     freteMemoria=d;
-    if(el) el.innerHTML=avisoConexao+'🧠 Memória de frete: <strong>'+d.vendas+'</strong> vendas reais dos últimos 120 dias · atualiza sozinha a cada 3 horas';
+    if(el) el.innerHTML=avisoConexao+'🧠 Memória de frete: <strong>'+d.vendas+'</strong> vendas reais · usa o frete mais recente de cada faixa · atualiza sozinha a cada 3 horas';
     calc();
   }catch(e){
     console.log('Memória de frete indisponível:',e);
@@ -742,13 +746,13 @@ function getFrete(preco,platOverride){
       const ap2=(col===colPago)?ap:freteAprendido(cobrado,colPago);
       const f2=(col===colPago)?ap.m:(ap2?ap2.m:mlFrete(cobrado,colPago));
       if(fonteEl){
-        let t='🧠 <strong style="color:#4ade80">frete real aprendido</strong>: média de '+ap.nz+' vendas suas nessa faixa (variou de '+fmt(ap.mn)+' a '+fmt(ap.mx)+') · tabela diria '+fmt(estimado);
+        let t='🧠 <strong style="color:#4ade80">frete real aprendido</strong>: valor mais comum em '+ap.nz+' vendas recentes suas nessa faixa (variou de '+fmt(ap.mn)+' a '+fmt(ap.mx)+') · tabela diria '+fmt(estimado);
         if(ap.z>0) t+=' · '+Math.round(ap.z/ap.n*100)+'% das vendas saíram com frete R$ 0 pra você (não contei, pra margem não ficar otimista)';
         fonteEl.innerHTML=t;
       }
       return{f1:ap.m,f2:f2};
     }
-    if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela — ainda sem vendas suas suficientes nessa faixa de preço e peso';
+    if(fonteEl) fonteEl.innerHTML='📊 estimativa pela tabela'+(cobrado<=ML_AJUSTE_ATE_KG?' (ajustada pela alta recente do ML)':' (sem ajuste: faixa pesada, confira o valor real)')+' — ainda sem vendas suas suficientes nessa faixa de preço e peso';
     return{f1:estimado,f2:mlFrete(cobrado,colPago)};
   }
   if(plt==='sh'){
