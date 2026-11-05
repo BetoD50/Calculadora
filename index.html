@@ -209,7 +209,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 </div>
 
 <div class="card" id="card-comparativo-plats" style="display:none;border:1.5px solid #374151;">
-<div class="card-title neutro">🔀 Mercado Livre × Shopee × TikTok Shop — mesma margem, lado a lado</div>
+<div class="card-title neutro" id="compp-titulo">🔀 Mercado Livre × Shopee × TikTok Shop — mesma margem, lado a lado</div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="comp-plats-grid">
 <div id="compp-ml" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:12px;">
 <div style="font-size:10px;color:#FFE600;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🟡 Mercado Livre</div>
@@ -232,6 +232,17 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 </div>
 <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.5;" id="compp-obs"></div>
 <p class="fonte-nota" style="margin-top:8px;">Preço sugerido em cada plataforma pra bater a mesma margem que você pediu — mesmo peso e dimensões usados nos 3. Shopee precisa do peso preenchido pra calcular frete.</p>
+</div>
+
+<div class="card" id="card-kits" style="display:none;border:1.5px solid #374151;">
+<div class="card-title neutro">📦 Simulador de kits — com quantas unidades vale a pena?</div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+<div><label>Preço de 1 un (isca) R$</label><input type="number" id="kit_preco1" placeholder="ex: 29,90" step="0.01" min="0" oninput="simularKits()" /></div>
+<div><label>Desconto nas unidades extras (%)</label><input type="number" id="kit_desc" value="0" step="1" min="0" max="90" oninput="simularKits()" /></div>
+</div>
+<div id="kit-resumo" style="font-size:13px;margin:10px 0 6px;line-height:1.5;"></div>
+<div style="overflow-x:auto;"><table id="kit-tabela" style="width:100%;border-collapse:collapse;font-size:12px;"></table></div>
+<p class="fonte-nota" style="margin-top:8px;">Peso soma por unidade; a medida empilha as peças (altura x quantidade). Vale para a plataforma da aba ativa (ML, Shopee ou TikTok): o preço menos custo, taxa, imposto e frete é o que sobra. Outros custos entram uma vez por pedido.</p>
 </div>
 
 <div class="resultado-principal" id="resultado-principal">
@@ -770,6 +781,63 @@ function getFrete(preco,platOverride){
   return{f1:0,f2:0};
 }
 
+
+// Simulador de kits: 1, 2, 3, 4, 5, 6, 8, 10 unidades
+function simularKits(){
+  const card=document.getElementById('card-kits'); if(!card) return;
+  const g=function(id){return parseFloat(document.getElementById(id).value)||0;};
+  const custo=g('custo'), outros=g('outros'), impPct=g('imposto');
+  if(custo<=0){card.style.display='none';return;}
+  card.style.display='block';
+  const peso1=g('peso_global');
+  const dims=[g('dim_c'),g('dim_l'),g('dim_a')].sort(function(a,b){return b-a;});
+  const preco1=g('kit_preco1'), desc=g('kit_desc')/100;
+  const manualEl=document.getElementById('ml-frete-manual');
+  const salvo={peso:document.getElementById('peso_global').value,c:document.getElementById('dim_c').value,l:document.getElementById('dim_l').value,a:document.getElementById('dim_a').value,man:manualEl?manualEl.value:''};
+  const qtds=[1,2,3,4,5,6,8,10];
+  const linhas=[]; let primeiroLucro=null;
+  try{
+    if(manualEl) manualEl.value='';
+    qtds.forEach(function(n){
+      document.getElementById('peso_global').value=peso1>0?(peso1*n):'';
+      if(dims[0]>0&&dims[1]>0&&dims[2]>0){
+        document.getElementById('dim_c').value=dims[0];
+        document.getElementById('dim_l').value=dims[1];
+        document.getElementById('dim_a').value=dims[2]*n;
+      }
+      const cb=custo*n+outros;
+      let atual=null;
+      if(preco1>0){
+        const pk=preco1*(1+(n-1)*(1-desc));
+        atual=calcLucroNoPreco(cb,impPct,pk,plat);
+        if(primeiroLucro===null&&atual.lucro>0) primeiroLucro=n;
+      }
+      linhas.push({n:n,atual:atual});
+    });
+  } finally {
+    document.getElementById('peso_global').value=salvo.peso;
+    document.getElementById('dim_c').value=salvo.c;
+    document.getElementById('dim_l').value=salvo.l;
+    document.getElementById('dim_a').value=salvo.a;
+    if(manualEl) manualEl.value=salvo.man;
+    getFrete(ultimoPrecoCalc||0,'ml'); getFrete(ultimoPrecoCalc||0,'sh');
+  }
+  const r=document.getElementById('kit-resumo'), tb=document.getElementById('kit-tabela');
+  if(!(preco1>0)){tb.innerHTML='';r.innerHTML='Digite o preço de 1 un (isca) para ver o lucro e a margem de cada kit.';return;}
+  let h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Qtd</th><th style="padding:4px;">Preço do kit</th><th style="padding:4px;">Taxa</th><th style="padding:4px;">Imposto</th><th style="padding:4px;">Frete</th><th style="padding:4px;">Sobra R$</th><th style="padding:4px;">Margem</th></tr>';
+  let melhor=linhas[0];
+  linhas.forEach(function(L){
+    const a=L.atual, cor=a.lucro<0?'#ef4444':(a.margem>=15?'#22c55e':'#f59e0b');
+    if(a.margem>melhor.atual.margem) melhor=L;
+    h+='<tr style="border-top:1px solid #2a2f3e;text-align:right;"><td style="text-align:left;padding:5px 4px;font-weight:700;">'+L.n+' un</td><td style="padding:5px 4px;">'+fmt(a.preco)+'</td><td style="padding:5px 4px;color:#9ca3af;">'+fmt(a.comissao)+'</td><td style="padding:5px 4px;color:#9ca3af;">'+fmt(a.imposto)+'</td><td style="padding:5px 4px;color:#9ca3af;">'+fmt(a.frete)+'</td><td style="padding:5px 4px;color:'+cor+';font-weight:700;">'+fmt(a.lucro)+'</td><td style="padding:5px 4px;color:'+cor+';">'+a.margem.toFixed(1)+'%</td></tr>';
+  });
+  tb.innerHTML=h;
+  const um=linhas[0].atual;
+  let t='Com 1 un a '+fmt(preco1)+' você '+(um.lucro<0?'<strong style="color:#ef4444">perde '+fmt(-um.lucro)+'</strong>':'ganha <strong>'+fmt(um.lucro)+'</strong> ('+um.margem.toFixed(1)+'%)')+' por venda. ';
+  t+=primeiroLucro?(primeiroLucro===1?'':'O lucro começa no kit de <strong>'+primeiroLucro+' un</strong>. ')+'A melhor margem é no kit de <strong style="color:#22c55e">'+melhor.n+' un</strong> ('+melhor.atual.margem.toFixed(1)+'%).':'Nenhum kit até 10 un dá lucro nesse preço e desconto.';
+  r.innerHTML=t;
+}
+
 function calc(){
   const custo=parseFloat(document.getElementById('custo').value)||0;
   const impPct=parseFloat(document.getElementById('imposto').value)||0;
@@ -782,7 +850,7 @@ function calc(){
   const ci=document.getElementById('card-com-info');
   const compCard=document.getElementById('card-comparativo-ml');
   const compPlatsCard=document.getElementById('card-comparativo-plats');
-  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';if(compCard)compCard.style.display='none';if(compPlatsCard)compPlatsCard.style.display='none';return;}
+  if(custo<=0){rp.classList.remove('visible');met.style.display='none';cen.style.display='none';ci.style.display='none';if(compCard)compCard.style.display='none';if(compPlatsCard)compPlatsCard.style.display='none';simularKits();return;}
   function calcPrecoSug(custoBase,mrg){
     let p=custoBase/Math.max(0.01,1-impPct/100-mrg/100);
     for(let i=0;i<25;i++){const com=getComissao(p);const frete=getFrete(p);const pNovo=custoBase+com.val+p*(impPct/100)+frete.f1+p*(mrg/100);if(Math.abs(pNovo-p)<0.01)break;p=pNovo;}
@@ -799,9 +867,23 @@ function calc(){
   rp.classList.add('visible');
   document.getElementById('card-promo').style.display='block';
   calcPromo();
-  document.getElementById('res-label').textContent='💡 Preço sugerido — margem de '+margDes+'% ('+(plat==='ml'?'ML':plat==='sh'?'Shopee':'TikTok Shop')+')';
-  document.getElementById('res-preco').textContent=fmt(precoSug);
-  document.getElementById('res-detalhe').innerHTML='Custo: '+fmt(custo)+(outros>0?' | Outros: '+fmt(outros):'')+' | Frete: '+fmt(frete.f1)+' | Imposto '+impPct+'%: '+fmt(imp)+' | Comissão: '+fmt(com.val)+' | Lucro: <strong>'+fmt(preco-custoBase-frete.f1-imp-com.val)+'</strong>';
+  const nomePlat=(plat==='ml'?'ML':plat==='sh'?'Shopee':'TikTok Shop');
+  const lucroAgora=preco-custoBase-frete.f1-imp-com.val;
+  const margAgora=preco>0?(lucroAgora/preco)*100:0;
+  const roiAgora=custoBase>0?(lucroAgora/custoBase)*100:0;
+  const resPrecoEl=document.getElementById('res-preco');
+  if(precoM>0){
+    // modo "preço → lucro": mostra quanto sobra no preço que a pessoa digitou
+    document.getElementById('res-label').textContent='📌 Resultado no preço de '+fmt(precoM)+' ('+nomePlat+')';
+    resPrecoEl.textContent=(lucroAgora>=0?'Lucro ':'Prejuízo ')+fmt(Math.abs(lucroAgora))+' · '+pct(margAgora);
+    resPrecoEl.style.color=lucroAgora<0?'#ef4444':(margAgora>=20?'':'#f59e0b');
+    document.getElementById('res-detalhe').innerHTML='Preço '+fmt(precoM)+' − Custo '+fmt(custo)+(outros>0?' − Outros '+fmt(outros):'')+' − Frete '+fmt(frete.f1)+' − Imposto '+impPct+'% '+fmt(imp)+' − Comissão '+fmt(com.val)+' = <strong>'+fmt(lucroAgora)+'</strong> · ROI '+pct(roiAgora)+'<br>Para ter '+margDes+'% de margem, o preço seria <strong>'+fmt(precoSug)+'</strong>.';
+  } else {
+    document.getElementById('res-label').textContent='💡 Preço sugerido — margem de '+margDes+'% ('+nomePlat+')';
+    resPrecoEl.textContent=fmt(precoSug);
+    resPrecoEl.style.color='';
+    document.getElementById('res-detalhe').innerHTML='Custo: '+fmt(custo)+(outros>0?' | Outros: '+fmt(outros):'')+' | Frete: '+fmt(frete.f1)+' | Imposto '+impPct+'%: '+fmt(imp)+' | Comissão: '+fmt(com.val)+' | Lucro: <strong>'+fmt(lucroAgora)+'</strong>';
+  }
   met.style.display='grid';
   const lucro=preco-custoBase-frete.f1-imp-com.val;
   const margR=(lucro/preco)*100;
@@ -841,8 +923,18 @@ function calc(){
     compCard.style.display='none';
   }
 
-  atualizarComparativoPlataformas(custoBase,impPct,margDes);
+  atualizarComparativoPlataformas(custoBase,impPct,margDes,precoM);
   if(compPlatsCard)compPlatsCard.style.display='block';
+  simularKits();
+}
+
+// Lucro de uma plataforma num preço DIGITADO (o inverso do preço sugerido).
+function calcLucroNoPreco(custoBase,impPct,preco,platName){
+  const fr=getFrete(preco,platName);
+  const co=getComissao(preco,platName);
+  const imp=preco*(impPct/100);
+  const lucro=preco-custoBase-fr.f1-imp-co.val;
+  return{preco:preco,frete:fr.f1,comissao:co.val,comissaoLabel:co.label,imposto:imp,lucro:lucro,margem:preco>0?(lucro/preco)*100:0,roi:custoBase>0?(lucro/custoBase)*100:0};
 }
 
 // Calcula preço sugerido/frete/comissão/lucro pra uma plataforma específica,
@@ -864,17 +956,31 @@ function calcPrecoPlataforma(custoBase,impPct,mrg,platName){
   return{preco:p,frete:freteFinal.f1,comissao:comFinal.val,comissaoLabel:comFinal.label,imposto:imp,lucro:lucro,margem:p>0?(lucro/p)*100:0};
 }
 
-function atualizarComparativoPlataformas(custoBase,impPct,margDes){
+function atualizarComparativoPlataformas(custoBase,impPct,margDes,precoM){
   const peso=parseFloat(document.getElementById('peso_global').value)||0;
-  const rML=calcPrecoPlataforma(custoBase,impPct,margDes,'ml');
-  const rSH=calcPrecoPlataforma(custoBase,impPct,margDes,'sh');
-  const rTIK=calcPrecoPlataforma(custoBase,impPct,margDes,'tik');
-  const resultados=[{id:'ml',r:rML},{id:'sh',r:rSH},{id:'tik',r:rTIK}];
+  precoM=precoM||0;
+  const ids=['ml','sh','tik'];
+  // preço de cada plataforma: o digitado na própria caixa; senão o preço de venda geral; senão o sugerido pela margem
+  const precoDigitado={};
+  let algumPreco=false;
+  ids.forEach(function(id){
+    const el=document.getElementById('compp-'+id+'-in');
+    const v=el?(parseFloat(el.value)||0):0;
+    precoDigitado[id]=v>0?v:(precoM>0?precoM:0);
+    if(precoDigitado[id]>0) algumPreco=true;
+  });
+  const resultados=ids.map(function(id){
+    const r=precoDigitado[id]>0?calcLucroNoPreco(custoBase,impPct,precoDigitado[id],id):calcPrecoPlataforma(custoBase,impPct,margDes,id);
+    return{id:id,r:r,digitado:precoDigitado[id]>0};
+  });
+  const tituloEl=document.getElementById('compp-titulo');
+  if(tituloEl) tituloEl.textContent=algumPreco?'🔀 Mercado Livre × Shopee × TikTok Shop — quanto sobra no preço que você digitou':'🔀 Mercado Livre × Shopee × TikTok Shop — mesma margem, lado a lado';
 
   resultados.forEach(function(item){
-    document.getElementById('compp-'+item.id+'-preco').textContent=fmt(item.r.preco);
-    document.getElementById('compp-'+item.id+'-detalhe').innerHTML='Frete: '+fmt(item.r.frete)+' · Comissão: '+fmt(item.r.comissao)+' ('+item.r.comissaoLabel+')';
-    document.getElementById('compp-'+item.id+'-lucro').innerHTML='Lucro: <strong style="color:#22c55e">'+fmt(item.r.lucro)+'</strong> ('+item.r.margem.toFixed(1)+'%)';
+    const m=item.r.margem, cor=item.r.lucro<0?'#ef4444':(m>=20?'#22c55e':'#f59e0b');
+    document.getElementById('compp-'+item.id+'-preco').textContent=fmt(item.r.preco)+(item.digitado?' (seu preço)':' (sugerido)');
+    document.getElementById('compp-'+item.id+'-detalhe').innerHTML='Frete: '+fmt(item.r.frete)+' · Comissão: '+fmt(item.r.comissao)+' ('+item.r.comissaoLabel+') · Imposto: '+fmt(item.r.imposto);
+    document.getElementById('compp-'+item.id+'-lucro').innerHTML=(item.r.lucro<0?'Prejuízo: ':'Lucro: ')+'<strong style="color:'+cor+'">'+fmt(Math.abs(item.r.lucro))+'</strong> ('+m.toFixed(1)+'%)'+(item.digitado&&item.r.roi!==undefined?' · ROI '+item.r.roi.toFixed(0)+'%':'');
   });
 
   // avisa se falta peso pra Shopee/ML calcularem o frete direito
