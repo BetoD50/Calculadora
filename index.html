@@ -78,6 +78,19 @@ input:focus, select:focus { border-color: var(--accent, #FFE600); }
 @media(max-width:600px){ .prod-bar { grid-template-columns: 1fr 1fr; } .prod-bar > div:first-child { grid-column: 1 / -1; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// Aceita vírgula nos campos numéricos (19,05): os campos viram texto com teclado decimal
+// e parseFloat passa a entender "19,05" como 19.05.
+(function(){
+  var _pf=window.parseFloat;
+  window.parseFloat=function(v){ if(typeof v==='string') v=v.replace(/\s/g,'').replace(',','.'); return _pf(v); };
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('input[type=number]').forEach(function(i){
+      i.type='text'; i.setAttribute('inputmode','decimal'); i.setAttribute('autocomplete','off');
+    });
+  });
+})();
+</script>
 </head>
 <body>
 <div class="container">
