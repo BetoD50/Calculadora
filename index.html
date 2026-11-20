@@ -137,7 +137,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 </div>
 </div>
 <div class="prod-bar">
-<div><label>Nome do produto</label><input type="text" id="prod_nome" placeholder="ex: Desempenadeira dentada 20cm" /></div>
+<div><label>Nome do produto</label><input type="text" id="prod_nome" placeholder="ex: Desempenadeira dentada 20cm" onchange="detectarCategoria()" /></div>
 <button onclick="salvarProduto()" style="padding:9px 16px;border-radius:7px;border:none;background:#22c55e;color:#04150a;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">💾 Salvar</button>
 <button onclick="limparTudo()" style="padding:9px 14px;border-radius:7px;border:1px solid #2a2f3e;background:transparent;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Limpar</button>
 </div>
@@ -168,11 +168,16 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📊 Comissão da Plataforma</div>
 <div id="com-ml">
 <div style="margin-bottom:10px;">
-<label>📂 Categoria ML <span style="color:#374151">navegue para comissão exata</span></label>
+<label>📂 Categoria ML <span style="color:#374151">detectada sozinha pelo nome do produto</span></label>
+<div id="cat-auto-status" style="font-size:12px;color:#9ca3af;margin-bottom:6px;">Digite o nome do produto (ou busque o SKU) que a categoria e a comissão aparecem sozinhas.</div>
+<div id="cat-auto-opcoes" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;"></div>
+<details id="cat-manual" ontoggle="if(this.open&&!window._catTreeCarregada){window._catTreeCarregada=true;carregarCategorias('');}">
+<summary style="cursor:pointer;font-size:11px;color:#6b7280;margin-bottom:6px;">Escolher a categoria manualmente</summary>
 <div id="cat-breadcrumb" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:16px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;"></div>
 <div id="cat-tree" style="background:#0b0e14;border:1px solid #1e2533;border-radius:7px;max-height:220px;overflow-y:auto;">
 <div style="padding:12px;color:#6b7280;font-size:12px;text-align:center;">⏳ Carregando categorias...</div>
 </div>
+</details>
 <div id="cat-selecionada" style="display:none;font-size:11px;color:#22c55e;margin-top:5px;padding:6px 10px;background:rgba(34,197,94,.08);border-radius:5px;border:1px solid rgba(34,197,94,.2);"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -1158,6 +1163,44 @@ async function carregarCategorias(catId){
   }
 }
 
+
+// Detecta a categoria do ML pelo nome do produto e já traz a comissão.
+let _catUltimoNome='';
+async function detectarCategoria(force){
+  const st=document.getElementById('cat-auto-status'), op=document.getElementById('cat-auto-opcoes');
+  if(!st) return;
+  const nome=(document.getElementById('prod_nome').value||'').trim().slice(0,120);
+  if(nome.length<4){return;}
+  if(!force&&nome===_catUltimoNome) return;
+  _catUltimoNome=nome;
+  st.style.color='#9ca3af'; st.textContent='⏳ Descobrindo a categoria de "'+nome+'"...';
+  op.innerHTML='';
+  try{
+    const r=await fetch('https://api.mercadolibre.com/sites/MLB/domain_discovery/search?limit=4&q='+encodeURIComponent(nome));
+    const lista=(await r.json()).filter(function(x){return x&&x.category_id;});
+    if(!lista.length){st.style.color='#f59e0b';st.textContent='⚠️ Não achei a categoria desse nome. Use "Escolher a categoria manualmente" ou ajuste a comissão.';return;}
+    await escolherCategoriaAuto(lista[0]);
+    lista.slice(1,4).forEach(function(c){
+      const b=document.createElement('button');
+      b.type='button'; b.textContent='ou: '+c.category_name;
+      b.style.cssText='font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #2a2f3e;background:transparent;color:#9ca3af;cursor:pointer;';
+      b.onclick=function(){escolherCategoriaAuto(c);};
+      op.appendChild(b);
+    });
+  }catch(e){
+    st.style.color='#f59e0b'; st.textContent='⚠️ Não consegui descobrir a categoria agora. Mantive a comissão atual.';
+  }
+}
+async function escolherCategoriaAuto(c){
+  const st=document.getElementById('cat-auto-status');
+  await selecionarCategoria(c.category_id,c.category_name);
+  const info=document.getElementById('cat-selecionada');
+  const tipoPrem=(parseFloat(document.getElementById('ml-com-pct').value)||0)>14;
+  st.style.color='#22c55e';
+  st.innerHTML='✅ Categoria: <strong>'+limparTxt(c.category_name)+'</strong> — comissão '+(tipoPrem?'Premium '+premiumBase:'Clássico '+classicoBase)+'% (Clássico '+classicoBase+'% · Premium '+premiumBase+'%)';
+  if(info) info.style.display='none';
+}
+
 async function selecionarCategoria(catId,nome){
   var sel=document.getElementById('cat-selecionada');
   sel.style.display='block';
@@ -1201,7 +1244,6 @@ async function initML(){
   else if(code){window.history.replaceState({},document.title,window.location.pathname);await trocarCodePorToken(code);}
   else if(ml==='ok'){window.history.replaceState({},document.title,window.location.pathname);await obterTokenSalvo();}
   else{await obterTokenSalvo();}
-  carregarCategorias('');
 }
 
 async function trocarCodePorToken(code){
@@ -1276,11 +1318,11 @@ async function buscarCustoTiny(){
       status.style.color='#ef4444';status.textContent='⛔ '+data.erro;
     } else if(!(data.custo>0)){
       status.style.color='#f59e0b';status.textContent='⚠️ "'+(data.nome||sku)+'" está na lista, mas sem custo. Digite o custo e clique em "💾 Salvar no cadastro de produtos".';
-      if(data.nome) document.getElementById('prod_nome').value=data.nome;
+      if(data.nome){ document.getElementById('prod_nome').value=data.nome; detectarCategoria(); }
     } else {
       document.getElementById('custo').value=data.custo.toFixed(2);
       var nomeEl=document.getElementById('prod_nome');
-      if(data.nome) nomeEl.value=data.nome;
+      if(data.nome){ nomeEl.value=data.nome; detectarCategoria(); }
       var medidasTxt='';
       if(data.peso>0){
         document.getElementById('peso_global').value=data.peso;
