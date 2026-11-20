@@ -190,7 +190,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 </div>
 <div><label>Comissão ML (%) <span style="color:#374151">editável</span></label><input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" /></div>
 </div>
-<label style="display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;cursor:pointer;font-size:12px;color:#d1d5db;"><input type="checkbox" id="ml-custofixo" onchange="calc()" style="width:auto;margin-top:2px;" /><span>Envio Flex (motoboy) — só abaixo de R$ 79<br><span style="font-size:10px;color:#6b7280;">No Flex o ML cobra R$ 6,65 de custo fixo e devolve R$ 9,99 do frete. O envio fica em ~R$ 8,56 no total (R$ 1,91 + R$ 6,65), contado na linha do frete. Baseado em uma venda sua real; se digitar o frete real, vale o seu valor.</span></span></label>
+<label style="display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;cursor:pointer;font-size:12px;color:#d1d5db;"><input type="checkbox" id="ml-custofixo" onchange="calc()" style="width:auto;margin-top:2px;" /><span>Envio Flex (motoboy)<br><span style="font-size:10px;color:#6b7280;">Motoboy R$ 11,90. Abaixo de R$ 79 o ML cobra R$ 6,65 de custo fixo e devolve R$ 9,99: envio líquido R$ 8,56. De R$ 79 para cima devolve só R$ 1,10: envio líquido R$ 10,80. Se digitar o frete real, vale o seu valor.</span></span></label>
 <div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% · Navegue pela árvore acima para ver a taxa exata da sua categoria.</div>
 </div>
 <div id="com-sh" style="display:none;">
@@ -734,9 +734,9 @@ function calcFrete(){
   }
 }
 
-var ML_CUSTO_FIXO=6.65, ML_FRETE_COM_FIXO=1.91, ML_LIMITE_FIXO=79;
-function mlCustoFixoOn(preco){var el=document.getElementById('ml-custofixo');return !!(el&&el.checked&&preco>0&&preco<ML_LIMITE_FIXO);}
-function mlComBonus(preco,r){if(!mlCustoFixoOn(preco))return r;var m=document.getElementById('ml-frete-manual');if(m&&parseFloat(m.value)>0)return r;var t=ML_FRETE_COM_FIXO+ML_CUSTO_FIXO;return{f1:t,f2:t};}
+var ML_CUSTO_FIXO=6.65, ML_FRETE_COM_FIXO=1.91, ML_LIMITE_FIXO=79, ML_FLEX_ACIMA=10.80;
+function mlFlexOn(preco){var el=document.getElementById('ml-custofixo');return !!(el&&el.checked&&preco>0);}
+function mlComBonus(preco,r){if(!mlFlexOn(preco))return r;var m=document.getElementById('ml-frete-manual');if(m&&parseFloat(m.value)>0)return r;var t=preco<ML_LIMITE_FIXO?(ML_FRETE_COM_FIXO+ML_CUSTO_FIXO):ML_FLEX_ACIMA;return{f1:t,f2:t};}
 function getComissao(preco,platOverride){
   var plt=platOverride||plat;
   if(plt==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
