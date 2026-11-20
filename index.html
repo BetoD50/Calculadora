@@ -256,7 +256,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div class="card" id="card-kits" style="display:none;border:1.5px solid #374151;">
 <div class="card-title neutro">📦 Simulador de kits — com quantas unidades vale a pena?</div>
 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-<div><label>Preço de 1 un (isca) R$</label><input type="number" id="kit_preco1" placeholder="ex: 29,90" step="0.01" min="0" oninput="simularKits()" /></div>
+<div><label>Preço de 1 un (isca) R$</label><input type="number" id="kit_preco1" placeholder="igual ao preço de venda" step="0.01" min="0" oninput="this.dataset.manual=(this.value.trim()==='')?'':'1';simularKits()" /></div>
 <div><label>Desconto nas unidades extras (%)</label><input type="number" id="kit_desc" value="0" step="1" min="0" max="90" oninput="simularKits()" /></div>
 </div>
 <div id="kit-resumo" style="font-size:13px;margin:10px 0 6px;line-height:1.5;"></div>
@@ -817,6 +817,8 @@ function simularKits(){
   card.style.display='block';
   const peso1=g('peso_global');
   const dims=[g('dim_c'),g('dim_l'),g('dim_a')].sort(function(a,b){return b-a;});
+  var kp=document.getElementById('kit_preco1'), pv=document.getElementById('preco_venda');
+  if(kp&&pv&&kp.dataset.manual!=='1'){kp.value=pv.value;}
   const preco1=g('kit_preco1'), desc=g('kit_desc')/100;
   const manualEl=document.getElementById('ml-frete-manual');
   const salvo={peso:document.getElementById('peso_global').value,c:document.getElementById('dim_c').value,l:document.getElementById('dim_l').value,a:document.getElementById('dim_a').value,man:manualEl?manualEl.value:''};
@@ -849,7 +851,7 @@ function simularKits(){
     getFrete(ultimoPrecoCalc||0,'ml'); getFrete(ultimoPrecoCalc||0,'sh');
   }
   const r=document.getElementById('kit-resumo'), tb=document.getElementById('kit-tabela');
-  if(!(preco1>0)){tb.innerHTML='';r.innerHTML='Digite o preço de 1 un (isca) para ver o lucro e a margem de cada kit.';return;}
+  if(!(preco1>0)){tb.innerHTML='';r.innerHTML='Digite o preço de venda lá em cima (ou aqui, se quiser testar outro preço) para ver o lucro e a margem de cada kit.';return;}
   let h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Qtd</th><th style="padding:4px;">Preço do kit</th><th style="padding:4px;">Taxa</th><th style="padding:4px;">Imposto</th><th style="padding:4px;">Frete</th><th style="padding:4px;">Sobra R$</th><th style="padding:4px;">Margem</th></tr>';
   let melhor=linhas[0];
   linhas.forEach(function(L){
