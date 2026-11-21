@@ -144,6 +144,23 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div id="lista-produtos" style="margin-top:12px;"></div>
 </div>
 
+<div class="card" id="card-vendidos">
+<div class="card-title neutro">📈 Meus produtos que vendem — margem real <span style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0;" id="vend-quando">— últimos 30 dias, direto do Mercado Livre</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+<button onclick="carregarVendidos()" id="btn-vendidos" style="padding:9px 16px;border-radius:7px;border:none;background:#60a5fa;color:#04101f;font-size:13px;font-weight:700;cursor:pointer;">📊 Carregar margem real</button>
+<label style="display:flex;align-items:center;gap:6px;margin:0;font-size:11px;color:#9ca3af;cursor:pointer;"><input type="checkbox" id="vend-poucos" checked onchange="renderVendidos()" style="width:auto;margin:0;" /> esconder quem vendeu menos de 3 un</label>
+</div>
+<div id="vend-status" style="font-size:11px;margin-top:6px;min-height:14px;color:#6b7280;"></div>
+<div id="vend-resumo" style="display:none;margin-top:8px;"></div>
+<div id="vend-ordem" style="display:none;gap:6px;flex-wrap:wrap;margin-top:10px;">
+<button onclick="ordenarVendidos('pior')" id="vo-pior" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">Piores primeiro</button>
+<button onclick="ordenarVendidos('lucro')" id="vo-lucro" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">Mais lucro (R$)</button>
+<button onclick="ordenarVendidos('vendas')" id="vo-vendas" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">Mais vendidos</button>
+</div>
+<div style="overflow-x:auto;margin-top:8px;"><table id="vend-tabela" style="width:100%;border-collapse:collapse;font-size:12px;"></table></div>
+<p class="fonte-nota" style="margin-top:8px;">Margem = o que sobrou de verdade depois de custo, imposto, comissão e frete (imposto 8% e custo da sua tabela). "Após ads" tira também o gasto com anúncios. Toque em Calcular para abrir o produto na calculadora e testar outro preço. Os dados vêm das suas vendas no Mercado Livre e se atualizam sozinhos. No Flex, o bônus do ML é estimado.</p>
+</div>
+
 <div class="card">
 <div class="card-title neutro">💰 Produto e Custos</div>
 <div class="grid-3" style="margin-bottom:11px;">
@@ -499,6 +516,59 @@ function calcAcos(){
   if(receitaTotal>0) obs+=tacos<=10?'✅ TACOS de '+tacos.toFixed(1)+'% — saudável. ':tacos<=20?'⚠️ TACOS de '+tacos.toFixed(1)+'% — atenção. ':'⛔ TACOS de '+tacos.toFixed(1)+'% — crítico. ';
   if(receitaAds>0) obs+='ROAS '+roas.toFixed(2)+'x.';
   document.getElementById('acos-obs').innerHTML=obs;
+}
+
+// ── Meus produtos que vendem: margem real (vendas do ML guardadas no Supabase) ──
+var vendDados=null, vendOrdem='pior';
+async function carregarVendidos(){
+  var st=document.getElementById('vend-status'), btn=document.getElementById('btn-vendidos');
+  st.style.color='#6b7280'; st.textContent='⏳ Carregando...'; btn.disabled=true;
+  try{
+    var r=await supaRpc('margem_real_pin',{});
+    if(r&&r.erro){st.style.color='#ef4444';st.textContent=r.erro==='bloqueado'?'🔒 Muitas tentativas de PIN. Aguarde 10 minutos.':'🔒 Precisa do PIN para ver a margem real.';btn.disabled=false;return;}
+    vendDados=(r&&r.itens)||[];
+    var q=document.getElementById('vend-quando');
+    if(r&&r.periodo_de&&r.periodo_ate){var f=function(d){var p=String(d).split('-');return p[2]+'/'+p[1];};q.textContent='— de '+f(r.periodo_de)+' a '+f(r.periodo_ate)+', direto do Mercado Livre';}
+    st.textContent=vendDados.length?'':'Ainda não há dados guardados.';
+    document.getElementById('vend-ordem').style.display='flex';
+    renderVendidos();
+  }catch(e){st.style.color='#ef4444';st.textContent='⚠️ Não consegui carregar. Tente de novo.';}
+  btn.disabled=false;
+}
+function ordenarVendidos(o){vendOrdem=o;renderVendidos();}
+function renderVendidos(){
+  if(!vendDados) return;
+  var esconder=document.getElementById('vend-poucos').checked;
+  var itens=vendDados.map(function(x){
+    var rec=Number(x.receita)||0, un=Number(x.unidades)||0, cm=Number(x.margem_contrib)||0, ads=Number(x.ads)||0;
+    return{listing:x.listing_id,sku:x.sku,titulo:x.titulo,conta:x.conta,rec:rec,un:un,cm:cm,ads:ads,
+      mg:rec>0?cm/rec*100:0,apos:rec>0?(cm-ads)/rec*100:0,pm:un>0?rec/un:0};
+  });
+  var tRec=0,tCm=0,tAds=0,abaixo=0,abaixoRec=0;
+  itens.forEach(function(x){tRec+=x.rec;tCm+=x.cm;tAds+=x.ads;if(x.apos<MARGEM_MIN){abaixo++;abaixoRec+=x.rec;}});
+  var res=document.getElementById('vend-resumo'); res.style.display='block';
+  res.innerHTML='<div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;font-size:12px;line-height:1.7;color:#d1d5db;">'
+    +'Faturou <strong>'+fmt(tRec)+'</strong> · sobrou <strong>'+fmt(tCm)+'</strong> ('+(tRec>0?(tCm/tRec*100).toFixed(1):'0.0')+'%) · após ads <strong>'+fmt(tCm-tAds)+'</strong> ('+(tRec>0?((tCm-tAds)/tRec*100).toFixed(1):'0.0')+'%)<br>'
+    +'<strong style="color:'+(abaixo>0?'#f59e0b':'#22c55e')+';">'+abaixo+' de '+itens.length+' anúncios estão abaixo de '+MARGEM_MIN+'% após ads</strong>, e eles somam '+fmt(abaixoRec)+' de faturamento.</div>';
+  if(esconder) itens=itens.filter(function(x){return x.un>=3;});
+  var ord={pior:function(a,b){return a.apos-b.apos;},lucro:function(a,b){return (b.cm-b.ads)-(a.cm-a.ads);},vendas:function(a,b){return b.un-a.un;}}[vendOrdem];
+  itens.sort(ord);
+  ['pior','lucro','vendas'].forEach(function(k){var b=document.getElementById('vo-'+k);if(b){var on=k===vendOrdem;b.style.borderColor=on?'#60a5fa':'#374151';b.style.color=on?'#60a5fa':'#9ca3af';}});
+  var h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Produto</th><th style="padding:4px;">Un</th><th style="padding:4px;">Preço médio</th><th style="padding:4px;">Margem</th><th style="padding:4px;">Após ads</th><th style="padding:4px;"></th></tr>';
+  itens.forEach(function(x){
+    var cor=x.apos<0?'#ef4444':(x.apos<MARGEM_MIN?'#fb923c':(x.apos<MARGEM_BOA?'#f59e0b':'#22c55e'));
+    h+='<tr style="border-top:1px solid #2a2f3e;text-align:right;"><td style="text-align:left;padding:6px 4px;max-width:220px;"><div style="color:#e5e7eb;">'+limparTxt(x.titulo)+'</div><div style="font-size:10px;color:#6b7280;">'+limparTxt(x.sku)+' · '+limparTxt(x.conta)+'</div></td>'
+      +'<td style="padding:6px 4px;">'+x.un+'</td><td style="padding:6px 4px;">'+fmt(x.pm)+'</td>'
+      +'<td style="padding:6px 4px;">'+x.mg.toFixed(1)+'%</td>'
+      +'<td style="padding:6px 4px;color:'+cor+';font-weight:700;">'+x.apos.toFixed(1)+'%<div style="font-size:10px;font-weight:400;">'+fmt(x.cm-x.ads)+'</div></td>'
+      +'<td style="padding:6px 4px;"><button onclick="usarProdutoVendido(\''+limparTxt(x.sku).replace(/'/g,'')+'\')" style="padding:5px 9px;border-radius:6px;border:1px solid #374151;background:transparent;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">Calcular</button></td></tr>';
+  });
+  document.getElementById('vend-tabela').innerHTML=h;
+}
+function usarProdutoVendido(sku){
+  document.getElementById('tiny_sku').value=sku;
+  try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+  buscarCustoTiny();
 }
 
 // ── Painel de promoção: cupom máximo, piso, ACOS que empata e tabela de cupons (Mercado Livre) ──
