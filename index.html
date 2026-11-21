@@ -190,7 +190,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 </div>
 <div><label>Comissão ML (%) <span style="color:#374151">editável</span></label><input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" /></div>
 </div>
-<label style="display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;cursor:pointer;font-size:12px;color:#d1d5db;"><input type="checkbox" id="ml-custofixo" onchange="calc()" style="width:auto;margin-top:2px;" /><span>Envio Flex (motoboy)<br><span style="font-size:10px;color:#6b7280;">Motoboy R$ 11,90. Abaixo de R$ 79 o ML cobra R$ 6,65 de custo fixo e devolve R$ 9,99: envio líquido R$ 8,56. De R$ 79 para cima devolve só R$ 1,10: envio líquido R$ 10,80. Se digitar o frete real, vale o seu valor.</span></span></label>
+<label style="display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;cursor:pointer;font-size:12px;color:#d1d5db;"><input type="checkbox" id="ml-custofixo" onchange="calc()" style="width:auto;margin-top:2px;" /><span>Envio Flex (motoboy)<br><span style="font-size:10px;color:#6b7280;">Motoboy R$ 11,90. Abaixo de R$ 50 o ML cobra R$ 6,65 de custo fixo e devolve cerca de R$ 9,99: envio líquido R$ 8,56. De R$ 50 a R$ 79 o custo fixo sobe para R$ 7,75: envio líquido R$ 8,70. De R$ 79 para cima não tem custo fixo e o envio líquido fica R$ 10,80. Se digitar o frete real, vale o seu valor.</span></span></label>
 <div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% · Navegue pela árvore acima para ver a taxa exata da sua categoria.</div>
 </div>
 <div id="com-sh" style="display:none;">
@@ -212,7 +212,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div id="ver-sem" style="border:1.5px solid #2a2f3e;border-radius:10px;padding:12px;"></div>
 </div>
 <div id="ver-piso" style="font-size:12px;color:#9ca3af;margin-top:10px;line-height:1.6;"></div>
-<p class="fonte-nota" style="margin-top:8px;">Você não precisa saber antes se a venda vai sair Flex: os dois casos aparecem juntos e o veredito vale para o pior. Flex usa o valor fixo do ML (R$ 8,56 abaixo de R$ 79, R$ 10,80 de R$ 79 para cima). Sem Flex usa o frete da tabela com o peso e as medidas do produto, ou o frete real que você digitar.</p>
+<p class="fonte-nota" style="margin-top:8px;">Você não precisa saber antes se a venda vai sair Flex: os dois casos aparecem juntos e o veredito vale para o pior. Flex usa o valor fixo do ML (R$ 8,56 abaixo de R$ 50, R$ 8,70 de R$ 50 a R$ 79, R$ 10,80 de R$ 79 para cima). Sem Flex usa o frete da tabela com o peso e as medidas do produto, ou o frete real que você digitar.</p>
 </div>
 
 <div class="card" id="card-kits" style="display:none;border:1.5px solid #374151;">
@@ -746,8 +746,11 @@ function calcFrete(){
 }
 
 var ML_CUSTO_FIXO=6.65, ML_FRETE_COM_FIXO=1.91, ML_LIMITE_FIXO=79, ML_FLEX_ACIMA=10.80;
+// de R$ 50 a R$ 79 o custo fixo sobe para R$ 7,75; envio liquido real medido nas vendas: R$ 8,70
+var ML_FAIXA_FIXO2=50, ML_FLEX_FAIXA2=8.70;
+function mlFlexLiquido(preco){return preco>=ML_LIMITE_FIXO?ML_FLEX_ACIMA:(preco>=ML_FAIXA_FIXO2?ML_FLEX_FAIXA2:(ML_FRETE_COM_FIXO+ML_CUSTO_FIXO));}
 function mlFlexOn(preco){var el=document.getElementById('ml-custofixo');return !!(el&&el.checked&&preco>0);}
-function mlComBonus(preco,r){if(!mlFlexOn(preco))return r;var m=document.getElementById('ml-frete-manual');if(m&&parseFloat(m.value)>0)return r;var t=preco<ML_LIMITE_FIXO?(ML_FRETE_COM_FIXO+ML_CUSTO_FIXO):ML_FLEX_ACIMA;return{f1:t,f2:t};}
+function mlComBonus(preco,r){if(!mlFlexOn(preco))return r;var m=document.getElementById('ml-frete-manual');if(m&&parseFloat(m.value)>0)return r;var t=mlFlexLiquido(preco);return{f1:t,f2:t};}
 function getComissao(preco,platOverride){
   var plt=platOverride||plat;
   if(plt==='ml'){const pctVal=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;return{val:preco*pctVal,label:(pctVal*100).toFixed(1)+'%'};}
@@ -822,7 +825,7 @@ function getFreteBase(preco,platOverride){
 // ── Veredito: os dois casos do Mercado Livre (Flex e sem Flex) lado a lado ──
 var MARGEM_MIN=15, MARGEM_BOA=20;
 function freteCaso(preco,flex){
-  if(flex) return preco<ML_LIMITE_FIXO?(ML_FRETE_COM_FIXO+ML_CUSTO_FIXO):ML_FLEX_ACIMA;
+  if(flex) return mlFlexLiquido(preco);
   return getFreteBase(preco,'ml').f1;
 }
 function lucroCaso(cb,impPct,preco,flex){
