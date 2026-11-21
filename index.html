@@ -342,7 +342,22 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div><label>Cupom (%)</label><input type="number" id="cupom_pct" value="0" step="0.5" min="0" max="50" oninput="calcPromo()" /></div>
 <div><label>Afiliado (%)</label><input type="number" id="afiliado_pct" value="0" step="0.5" min="0" max="30" oninput="calcPromo()" /></div>
 </div>
+<div class="grid-3" style="margin-bottom:11px;">
+<div><label>Cupom (R$) <span style="color:#374151">valor fixo, como o do ML</span></label><input type="number" id="cupom_rs" value="0" step="0.5" min="0" oninput="calcPromo()" /></div>
+</div>
 <div id="promo-resultado" style="display:none;">
+<div id="promo-painel" style="display:none;margin-bottom:12px;">
+<div id="pp-topo" style="border-radius:10px;padding:14px;margin-bottom:10px;"></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px;">
+<div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;"><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Cupom máximo</div><div style="font-size:20px;font-weight:900;color:#22c55e;margin-top:3px;" id="pp-cupmax">—</div><div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5;" id="pp-cupmax-obs"></div></div>
+<div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;"><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Preço mínimo (lucro zero)</div><div style="font-size:20px;font-weight:900;color:#f87171;margin-top:3px;" id="pp-piso">—</div><div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5;">Abaixo disso você paga para vender, no pior caso do envio.</div></div>
+<div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;"><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">ACOS que empata</div><div style="font-size:20px;font-weight:900;margin-top:3px;" id="pp-acos">—</div><div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.5;" id="pp-acos-obs"></div></div>
+</div>
+<div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:11px;overflow-x:auto;">
+<div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Quanto custa cada cupom (pior caso do envio)</div>
+<table id="pp-tabela" style="width:100%;border-collapse:collapse;font-size:12px;"></table>
+</div>
+</div>
 <div style="background:#0b0e14;border:1px solid #1a1f2e;border-radius:8px;padding:12px;margin-bottom:10px;">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
 <div><div style="font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Preço com desconto</div><div style="font-size:24px;font-weight:900;color:#fff;" id="p-preco-desc">—</div></div>
@@ -351,8 +366,8 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <div style="font-size:11px;color:#6b7280;margin-top:8px;padding-top:8px;border-top:1px solid #1a1f2e;">⚠️ Frete e comissão são recalculados sobre o preço COM desconto (é assim que o marketplace cobra de verdade): Frete <strong id="p-frete-recalc" style="color:#e5e7eb;">—</strong> · Comissão <strong id="p-com-recalc" style="color:#e5e7eb;">—</strong></div>
 </div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
-<div class="metrica" id="pm-lucro"><div class="metrica-val" id="pv-lucro">—</div><div class="metrica-label">Lucro restante</div></div>
-<div class="metrica" id="pm-margem" style="border:1.5px solid #22c55e;"><div class="metrica-val" id="pv-margem">—</div><div class="metrica-label">📊 Margem sem ads</div></div>
+<div class="metrica" id="pm-lucro"><div class="metrica-val" id="pv-lucro">—</div><div class="metrica-label">Lucro restante<br><span style="color:#4b5563;">conforme a caixa Flex</span></div></div>
+<div class="metrica" id="pm-margem" style="border:1.5px solid #22c55e;"><div class="metrica-val" id="pv-margem">—</div><div class="metrica-label">📊 Margem sem ads<br><span style="color:#4b5563;">conforme a caixa Flex</span></div></div>
 <div class="metrica" id="pm-afiliado"><div class="metrica-val" id="pv-afiliado">—</div><div class="metrica-label">Custo afiliado</div></div>
 <div class="metrica" id="pm-sobra"><div class="metrica-val" id="pv-sobra">—</div><div class="metrica-label">Sobra p/ Ads</div></div>
 </div>
@@ -486,13 +501,60 @@ function calcAcos(){
   document.getElementById('acos-obs').innerHTML=obs;
 }
 
+// ── Painel de promoção: cupom máximo, piso, ACOS que empata e tabela de cupons (Mercado Livre) ──
+function lucroPromoPior(cb,impPct,p,afil){
+  var fa=p*((afil||0)/100);
+  var l=Math.min(lucroCaso(cb,impPct,p,true).lucro,lucroCaso(cb,impPct,p,false).lucro)-fa;
+  return{lucro:l,margem:p>0?(l/p)*100:0};
+}
+function atualizarPainelPromo(precoBase,promoPct,cupomAtual,afil,cb,impPct,precoDesc){
+  var box=document.getElementById('promo-painel'); if(!box) return;
+  if(plat!=='ml'||!(precoDesc>0)||!(cb>0)){box.style.display='none';return;}
+  box.style.display='block';
+  var pSem=precoBase*(1-promoPct/100);
+  var r=lucroPromoPior(cb,impPct,precoDesc,afil), v=veredito(r.margem);
+  var p15=Math.max(precoParaMargem(cb,impPct,MARGEM_MIN,true,afil),precoParaMargem(cb,impPct,MARGEM_MIN,false,afil));
+  var p0=Math.max(precoParaMargem(cb,impPct,0,true,afil),precoParaMargem(cb,impPct,0,false,afil));
+  var cupMax=Math.max(0,pSem-p15);
+  var msg;
+  if(r.lucro<0) msg='Nesse preço você perde dinheiro. Reduza o cupom ou a promoção.';
+  else if(r.margem<MARGEM_MIN) msg='Abaixo de '+MARGEM_MIN+'%. O cupom pode ir até '+fmt(cupMax)+' para ficar em '+MARGEM_MIN+'%.';
+  else if(r.margem<MARGEM_BOA) msg='Acima do mínimo de '+MARGEM_MIN+'%, mas já perto.';
+  else msg='Margem boa mesmo com o desconto.';
+  var topo=document.getElementById('pp-topo');
+  topo.style.background=v.fundo; topo.style.border='1.5px solid '+v.cor;
+  topo.innerHTML='<span style="padding:4px 11px;border-radius:999px;border:1.5px solid '+v.cor+';color:'+v.cor+';font-size:11px;font-weight:800;">'+(r.margem>=MARGEM_MIN?'PODE'+(r.margem<MARGEM_BOA?', COM CUIDADO':''):(r.lucro<0?'NÃO PODE':'NÃO COMPENSA'))+'</span>'
+    +'<div style="font-size:20px;font-weight:900;color:#fff;margin-top:8px;">Cliente paga '+fmt(precoDesc)+' e '+(r.lucro<0?'perde ':'sobra ')+fmt(Math.abs(r.lucro))+'</div>'
+    +'<div style="font-size:12px;color:'+v.cor+';margin-top:3px;">'+r.margem.toFixed(1)+'% de margem no pior caso (Flex ou envio normal). '+msg+'</div>';
+  document.getElementById('pp-cupmax').textContent=fmt(cupMax);
+  document.getElementById('pp-cupmax-obs').innerHTML='Até aqui a margem fica em '+MARGEM_MIN+'%. Preço mínimo para '+MARGEM_MIN+'%: <strong style="color:#e5e7eb;">'+fmt(p15)+'</strong>.';
+  document.getElementById('pp-piso').textContent=fmt(p0);
+  var ac=document.getElementById('pp-acos'), ac15=Math.max(0,r.margem-MARGEM_MIN);
+  ac.textContent=(r.margem>0?r.margem.toFixed(1):'0.0')+'%'; ac.style.color=r.margem>0?'#e5e7eb':'#f87171';
+  document.getElementById('pp-acos-obs').innerHTML='Acima disso o ads dá prejuízo. Para manter '+MARGEM_MIN+'% o ads não passa de <strong style="color:#e5e7eb;">'+ac15.toFixed(1)+'%</strong> da venda.';
+  var vals=[0,1,2,3,4,5,6,8,10];
+  if(cupMax>0) vals.push(Math.round(cupMax*100)/100);
+  if(cupomAtual>0) vals.push(Math.round(cupomAtual*100)/100);
+  vals=vals.filter(function(x,i,a){return a.indexOf(x)===i;}).sort(function(a,b){return a-b;});
+  var h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Cupom</th><th style="padding:4px;">Cliente paga</th><th style="padding:4px;">Sobra</th><th style="padding:4px;">Margem</th></tr>';
+  vals.forEach(function(c){
+    var p=pSem-c; if(p<=0) return;
+    var x=lucroPromoPior(cb,impPct,p,afil), vv=veredito(x.margem);
+    var seu=Math.abs(c-Math.round(cupomAtual*100)/100)<0.005&&cupomAtual>0, lim=Math.abs(c-Math.round(cupMax*100)/100)<0.005&&cupMax>0&&cupMax!==cupomAtual;
+    var rot=c===0?'sem cupom':fmt(c)+(seu?' · o seu':'')+(lim?' · limite':'');
+    h+='<tr style="border-top:1px solid #1a1f2e;text-align:right;'+(seu?'background:#161b2a;':'')+'"><td style="text-align:left;padding:5px 4px;font-weight:'+(seu||lim?'700':'400')+';">'+rot+'</td><td style="padding:5px 4px;">'+fmt(p)+'</td><td style="padding:5px 4px;color:'+vv.cor+';font-weight:700;">'+fmt(x.lucro)+'</td><td style="padding:5px 4px;color:'+vv.cor+';">'+x.margem.toFixed(1)+'%</td></tr>';
+  });
+  document.getElementById('pp-tabela').innerHTML=h;
+}
+
 function calcPromo(){
   const precoBase=ultimoPrecoCalc||0;
   if(precoBase<=0) return;
   const promoPct=parseFloat(document.getElementById('promo_pct').value)||0;
   const cupomPct=parseFloat(document.getElementById('cupom_pct').value)||0;
   const afiliadoPct=parseFloat(document.getElementById('afiliado_pct').value)||0;
-  const descTotal=precoBase*(promoPct/100)+precoBase*(cupomPct/100);
+  const cupomRs=parseFloat((document.getElementById('cupom_rs')||{}).value)||0;
+  const descTotal=precoBase*(promoPct/100)+precoBase*(cupomPct/100)+cupomRs;
   const precoDesc=precoBase-descTotal;
   // Frete e comissão do marketplace são cobrados sobre o preço REAL de venda
   // (já com promoção/cupom aplicados), não sobre o preço cheio. Por isso
@@ -518,7 +580,7 @@ function calcPromo(){
   const adsSaudavelR=Math.max(0,lucroRestante-precoDesc*(margemMinima/100));
   const adsSaudavelPct=precoDesc>0?(adsSaudavelR/precoDesc)*100:0;
   document.getElementById('p-preco-desc').textContent=fmt(precoDesc);
-  document.getElementById('p-desc-total').textContent='-'+fmt(descTotal)+' ('+(promoPct+cupomPct).toFixed(1)+'%)';
+  document.getElementById('p-desc-total').textContent='-'+fmt(descTotal)+' ('+(precoBase>0?(descTotal/precoBase*100):0).toFixed(1)+'%)';
   document.getElementById('pv-lucro').textContent=fmt(lucroRestante);
   document.getElementById('pv-margem').textContent=margemRestante.toFixed(1)+'%';
   document.getElementById('pv-afiliado').textContent=fmt(custoAfiliado);
@@ -538,6 +600,7 @@ function calcPromo(){
   ultimoLucroPromo=lucroRestante;
   ultimoPrecoDescCalc=precoDesc;
   renderAdsReal();
+  atualizarPainelPromo(precoBase,promoPct,precoBase*(cupomPct/100)+cupomRs,afiliadoPct,custoBaseP,impPct,precoDesc);
   document.getElementById('promo-resultado').style.display='block';
 }
 
@@ -833,9 +896,9 @@ function lucroCaso(cb,impPct,preco,flex){
   var lucro=preco-cb-fr-imp-com;
   return{preco:preco,frete:fr,comissao:com,imposto:imp,lucro:lucro,margem:preco>0?(lucro/preco)*100:0};
 }
-function precoParaMargem(cb,impPct,mrg,flex){
+function precoParaMargem(cb,impPct,mrg,flex,extra){
   var cp=(parseFloat(document.getElementById('ml-com-pct').value)||12)/100;
-  var den=Math.max(0.01,1-impPct/100-cp-mrg/100);
+  var den=Math.max(0.01,1-impPct/100-cp-mrg/100-(extra||0)/100);
   var p=cb/den;
   for(var i=0;i<30;i++){var n=(cb+freteCaso(p,flex))/den;if(Math.abs(n-p)<0.005){p=n;break;}p=n;}
   return p;
