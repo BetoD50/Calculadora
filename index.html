@@ -158,7 +158,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <button onclick="ordenarVendidos('vendas')" id="vo-vendas" style="padding:6px 12px;border-radius:7px;border:1px solid #374151;background:transparent;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;">Mais vendidos</button>
 </div>
 <div style="overflow-x:auto;margin-top:8px;"><table id="vend-tabela" style="width:100%;border-collapse:collapse;font-size:12px;"></table></div>
-<p class="fonte-nota" style="margin-top:8px;">Margem = o que sobrou de verdade depois de custo, imposto, comissão e frete (imposto 8% e custo da sua tabela). "Após ads" tira também o gasto com anúncios. Toque em Calcular para abrir o produto na calculadora e testar outro preço. Os dados vêm das suas vendas no Mercado Livre e se atualizam sozinhos. No Flex, o bônus do ML é estimado.</p>
+<p class="fonte-nota" style="margin-top:8px;">Margem = o que sobrou de verdade depois de custo, imposto, comissão e frete (imposto 8% e custo da sua tabela). "Após ads" tira também o gasto com anúncios. Toque em Calcular para abrir o produto na calculadora e testar outro preço. Os dados vêm das suas vendas no Mercado Livre e se atualizam sozinhos. A "tarifa ML real" é o que o ML cobrou de verdade (comissão + taxa fixa, quando tem) sobre o preço vendido. No Flex, o bônus do ML é estimado.</p>
 </div>
 
 <div class="card">
@@ -205,7 +205,7 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <button id="btn-premium" onclick="setTipoAnuncio('premium')" style="flex:1;padding:8px;border-radius:7px;border:2px solid #2a2f3e;background:transparent;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;">Premium <span id="lbl-premium">17%</span></button>
 </div>
 </div>
-<div><label>Comissão ML (%) <span style="color:#374151">editável</span></label><input type="number" id="ml-com-pct" value="12" step="0.5" min="0" max="30" oninput="calc()" /></div>
+<div><label>Comissão ML (%) <span style="color:#374151">editável</span></label><input type="number" id="ml-com-pct" value="12" step="any" min="0" max="30" oninput="calc()" /></div>
 </div>
 <label style="display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;padding:9px 12px;background:#0b0e14;border:1px solid #1a1f2e;border-radius:7px;cursor:pointer;font-size:12px;color:#d1d5db;"><input type="checkbox" id="ml-custofixo" onchange="calc()" style="width:auto;margin-top:2px;" /><span>Envio Flex (motoboy)<br><span style="font-size:10px;color:#6b7280;">Motoboy R$ 11,90. Abaixo de R$ 50 o ML cobra R$ 6,65 de custo fixo e devolve cerca de R$ 9,99: envio líquido R$ 8,56. De R$ 50 a R$ 79 o custo fixo sobe para R$ 7,75: envio líquido R$ 8,70. De R$ 79 para cima não tem custo fixo e o envio líquido fica R$ 10,80. Se digitar o frete real, vale o seu valor.</span></span></label>
 <div class="com-info" id="com-info-ml">Clássico: 12% · Premium: 17% · Navegue pela árvore acima para ver a taxa exata da sua categoria.</div>
@@ -540,8 +540,8 @@ function renderVendidos(){
   if(!vendDados) return;
   var esconder=document.getElementById('vend-poucos').checked;
   var itens=vendDados.map(function(x){
-    var rec=Number(x.receita)||0, un=Number(x.unidades)||0, cm=Number(x.margem_contrib)||0, ads=Number(x.ads)||0;
-    return{listing:x.listing_id,sku:x.sku,titulo:x.titulo,conta:x.conta,rec:rec,un:un,cm:cm,ads:ads,
+    var rec=Number(x.receita)||0, tar=Number(x.tarifa)||0, un=Number(x.unidades)||0, cm=Number(x.margem_contrib)||0, ads=Number(x.ads)||0;
+    return{listing:x.listing_id,sku:x.sku,titulo:x.titulo,conta:x.conta,rec:rec,tar:rec>0?tar/rec*100:0,un:un,cm:cm,ads:ads,
       mg:rec>0?cm/rec*100:0,apos:rec>0?(cm-ads)/rec*100:0,pm:un>0?rec/un:0};
   });
   var tRec=0,tCm=0,tAds=0,abaixo=0,abaixoRec=0;
@@ -554,7 +554,7 @@ function renderVendidos(){
   var ord={pior:function(a,b){return a.apos-b.apos;},lucro:function(a,b){return (b.cm-b.ads)-(a.cm-a.ads);},vendas:function(a,b){return b.un-a.un;}}[vendOrdem];
   itens.sort(ord);
   ['pior','lucro','vendas'].forEach(function(k){var b=document.getElementById('vo-'+k);if(b){var on=k===vendOrdem;b.style.borderColor=on?'#60a5fa':'#374151';b.style.color=on?'#60a5fa':'#9ca3af';}});
-  var h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Produto</th><th style="padding:4px;">Un</th><th style="padding:4px;">Preço médio</th><th style="padding:4px;">Margem</th><th style="padding:4px;">Após ads</th><th style="padding:4px;"></th></tr>';
+  var h='<tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Produto</th><th style="padding:4px;">Un</th><th style="padding:4px;">Preço médio<div style="font-size:9px;font-weight:400;">tarifa ML real</div></th><th style="padding:4px;">Margem</th><th style="padding:4px;">Após ads</th><th style="padding:4px;"></th></tr>';
   itens.forEach(function(x){
     var cor=x.apos<0?'#ef4444':(x.apos<MARGEM_MIN?'#fb923c':(x.apos<MARGEM_BOA?'#f59e0b':'#22c55e'));
     h+='<tr style="border-top:1px solid #2a2f3e;text-align:right;"><td style="text-align:left;padding:6px 4px;max-width:220px;"><div style="color:#e5e7eb;">'+limparTxt(x.titulo)+'</div><div style="font-size:10px;color:#6b7280;">'+limparTxt(x.sku)+' · '+limparTxt(x.conta)+'</div></td>'
@@ -956,7 +956,7 @@ function getFreteBase(preco,platOverride){
 
 
 // ── Veredito: os dois casos do Mercado Livre (Flex e sem Flex) lado a lado ──
-var MARGEM_MIN=15, MARGEM_BOA=20;
+var MARGEM_MIN=15, MARGEM_BOA=30;
 function freteCaso(preco,flex){
   if(flex) return mlFlexLiquido(preco);
   return getFreteBase(preco,'ml').f1;
