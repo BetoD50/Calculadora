@@ -1410,7 +1410,7 @@ async function detectarCategoria(force){
     await escolherCategoriaAuto(lista[0]);
     lista.slice(1,4).forEach(function(c){
       const b=document.createElement('button');
-      b.type='button'; b.textContent='ou: '+c.category_name;
+      b.type='button'; b.textContent='ou: '+c.category_name+(c.domain_name?' ('+c.domain_name+')':'');
       b.style.cssText='font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #2a2f3e;background:transparent;color:#9ca3af;cursor:pointer;';
       b.onclick=function(){escolherCategoriaAuto(c);};
       op.appendChild(b);
@@ -1421,8 +1421,9 @@ async function detectarCategoria(force){
 }
 async function escolherCategoriaAuto(c){
   const st=document.getElementById('cat-auto-status');
-  await selecionarCategoria(c.category_id,c.category_name);
+  const okFee=await selecionarCategoria(c.category_id,c.category_name);
   const info=document.getElementById('cat-selecionada');
+  if(!okFee){st.style.color='#f59e0b';st.textContent='⚠️ Achei a categoria "'+c.category_name+'", mas não consegui buscar a comissão dela agora. Confira o valor do campo "Comissão ML" antes de usar.';return;}
   const tipoPrem=(parseFloat(document.getElementById('ml-com-pct').value)||0)>14;
   st.style.color='#22c55e';
   st.innerHTML='✅ Categoria: <strong>'+limparTxt(c.category_name)+'</strong> — comissão '+(tipoPrem?'Premium '+premiumBase:'Clássico '+classicoBase)+'% (Clássico '+classicoBase+'% · Premium '+premiumBase+'%)';
@@ -1451,10 +1452,12 @@ async function selecionarCategoria(catId,nome){
       var isTipoPremium=parseFloat(document.getElementById('ml-com-pct').value)>14;
       setTipoAnuncio(isTipoPremium?'premium':'classico');
       salvarUltimo();
+      return true;
     } else {
       sel.textContent='⚠️ Não foi possível obter a taxa. Usando padrão.';
+      return false;
     }
-  }catch(e){sel.textContent='⚠️ Erro ao buscar taxa. Mantendo valor atual.';}
+  }catch(e){sel.textContent='⚠️ Erro ao buscar taxa. Mantendo valor atual.';return false;}
 }
 
 // ═══════════════════════════════════
