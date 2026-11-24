@@ -232,6 +232,10 @@ Exporte no UpSeller e escolha os arquivos (pode mandar só um deles):<br>
 <p class="fonte-nota" style="margin-top:8px;">Você não precisa saber antes se a venda vai sair Flex: os dois casos aparecem juntos e o veredito vale para o pior. Flex usa o valor fixo do ML (R$ 8,56 abaixo de R$ 50, R$ 8,70 de R$ 50 a R$ 79, R$ 10,80 de R$ 79 para cima). Sem Flex usa o frete da tabela com o peso e as medidas do produto, ou o frete real que você digitar.</p>
 </div>
 
+<div class="card" id="card-roas" style="display:none;border:1.5px solid #374151;">
+<div class="card-title neutro">📢 ROAS do anúncio — quanto o ads precisa vender <span id="roas-plat" style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0;"></span></div>
+<div id="roas-corpo" style="font-size:12px;line-height:1.7;color:#d1d5db;"></div>
+</div>
 <div class="card" id="card-kits" style="display:none;border:1.5px solid #374151;">
 <div class="card-title neutro">📦 Simulador de kits — com quantas unidades vale a pena?</div>
 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
@@ -571,6 +575,28 @@ function usarProdutoVendido(sku){
   buscarCustoTiny();
 }
 
+
+// ── ROAS: equilíbrio e ROAS para sobrar uma margem (margem bruta = preço − custo − outros − frete − imposto − comissão) ──
+function atualizarRoas(preco,lucroBase,nome,piorCaso){
+  var box=document.getElementById('card-roas'); if(!box) return;
+  if(!(preco>0)){box.style.display='none';return;}
+  box.style.display='block';
+  document.getElementById('roas-plat').textContent='— '+nome+(piorCaso?' (pior caso: Flex ou sem Flex)':'');
+  var corpo=document.getElementById('roas-corpo');
+  var mb=lucroBase, mbPct=mb/preco*100;
+  if(mb<=0){corpo.innerHTML='<strong style="color:#ef4444;">Esse preço não deixa margem antes do ads ('+fmt(mb)+' por venda). Qualquer gasto com anúncio dá prejuízo. Suba o preço antes de anunciar.</strong>';return;}
+  var linhas=[['Empata (sem lucro e sem prejuízo)',0]];
+  [10,15,20].forEach(function(m){linhas.push(['Para sobrar '+m+'% depois do ads',m]);});
+  var h='<div style="margin-bottom:6px;">Margem bruta antes do ads: <strong>'+fmt(mb)+'</strong> ('+mbPct.toFixed(1)+'% do preço de '+fmt(preco)+')</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="color:#9ca3af;text-align:right;"><th style="text-align:left;padding:4px;">Meta</th><th style="padding:4px;">ROAS mínimo</th><th style="padding:4px;">ACOS máximo</th></tr>';
+  linhas.forEach(function(l){
+    var folga=mbPct-l[1];
+    if(folga<=0){h+='<tr style="border-top:1px solid #2a2f3e;text-align:right;"><td style="text-align:left;padding:5px 4px;">'+l[0]+'</td><td colspan="2" style="padding:5px 4px;color:#6b7280;">não cabe ads nesse preço</td></tr>';return;}
+    h+='<tr style="border-top:1px solid #2a2f3e;text-align:right;"><td style="text-align:left;padding:5px 4px;">'+l[0]+'</td><td style="padding:5px 4px;font-weight:700;color:'+(l[1]===0?'#f59e0b':'#e5e7eb')+';">'+(100/folga).toFixed(2)+'</td><td style="padding:5px 4px;">'+folga.toFixed(1)+'%</td></tr>';
+  });
+  h+='</table><div style="font-size:10px;color:#6b7280;margin-top:6px;">ROAS = quanto o anúncio vende para cada R$ 1 gasto. Se o ROAS real ficar abaixo do mínimo, a venda por anúncio dá menos lucro que a meta. Troque a plataforma no topo para ver ML, Shopee e TikTok.</div>';
+  corpo.innerHTML=h;
+}
 // ── Painel de promoção: cupom máximo, piso, ACOS que empata e tabela de cupons (Mercado Livre) ──
 function lucroPromoPior(cb,impPct,p,afil){
   var fa=p*((afil||0)/100);
@@ -1134,6 +1160,7 @@ function calc(){
   const lucro=preco-custoBase-frete.f1-imp-com.val;
   const margR=(lucro/preco)*100;
   const roi=(lucro/custoBase)*100;
+  (function(){var lb=lucro,pc=false;if(plat==='ml'){try{lb=Math.min(lucroCaso(custoBase,impPct,preco,true).lucro,lucroCaso(custoBase,impPct,preco,false).lucro);pc=true;}catch(e){}}atualizarRoas(preco,lb,nomePlat,pc);})();
   set('v-lucro',fmt(lucro),'m-lucro',margR>=20?'ok':margR>=10?'warn':'bad');
   set('v-margem',pct(margR),'m-margem',margR>=25?'ok':margR>=12?'warn':'bad');
   set('v-roi',pct(roi),'m-roi',roi>=40?'ok':roi>=20?'warn':'bad');
